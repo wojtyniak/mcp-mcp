@@ -4,6 +4,7 @@ from typing import AsyncGenerator
 
 from mcp.server.fastmcp import FastMCP
 
+from agents import AgentManager, send_message
 from mcp_db import MCPDatabase  # noqa: E402
 from settings import app_logger
 
@@ -27,6 +28,18 @@ async def app_lifespan(_: FastMCP) -> AsyncGenerator[AppContext]:
 
 
 mcp = FastMCP("MCP-MCP", lifespan=app_lifespan)
+
+
+@mcp.tool()
+async def greet(name: str):
+    logger.debug("greeting %s", name)
+    runner = AgentManager.get_agent_runner("template", "mcp-mcp")
+    if runner is None:
+        raise ValueError("Runner is None")
+    logger.debug(f"sending message to agent {runner.agent.name}")
+    result = await send_message(runner, f"greet {name}")
+    logger.debug(f"result: {result}")
+    return result
 
 
 def main():

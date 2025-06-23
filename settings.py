@@ -6,6 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     debug: bool = Field(default=False, description="Debug mode")
+    llm_model: str = Field(
+        default="anthropic/claude-sonnet-4-20250514", description="LLM model to use"
+    )
 
     model_config = SettingsConfigDict(
         env_prefix="MCPMCP_",
