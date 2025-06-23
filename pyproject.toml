@@ -8,4 +8,10 @@ dependencies = [
     "google-adk>=1.4.2",
     "langfuse>=3.0.3",
     "litellm>=1.73.0",
+    "rich>=14.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.0.0",
 ]

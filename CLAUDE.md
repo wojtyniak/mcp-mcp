@@ -48,14 +48,14 @@ See @PRD.md for the product requirements and architecture documentation.
 ## Current Implementation Status
 
 **Implemented:**
-- Nothing yet
+- MCP server list parser (`search.py:parse_mcp_server_list()`)
+- Comprehensive pytest test suite (`search_test.py`)
 
 **Not Yet Implemented:**
 - Core MCP discovery logic
 - Docker integration
 - MCP protocol proxy
 - GitHub API integration
-- Testing infrastructure
 - CI/CD pipeline
 
 **Main Entry Point:** `main.py` currently contains placeholder code
@@ -81,10 +81,38 @@ def find_mcp_server(description: str, example_question: str | None = None) -> di
 - No privileged container execution
 - Environment variables for configuration secrets
 
+## Testing
+
+**Framework:** pytest is configured and working
+
+**Testing Patterns:**
+- Test files follow `*_test.py` naming convention 
+- Use pytest fixtures and assertions
+- Import modules directly: `from search import parse_mcp_server_list, MCPServerEntry`
+- Test multiple scenarios: normal cases, edge cases, type validation
+- Run tests with: `uv run pytest <test_file> -v`
+
+**Test Structure Example:**
+```python
+import pytest
+from module import function_to_test
+
+def test_function_basic_case():
+    result = function_to_test(input_data)
+    assert result == expected_output
+
+def test_function_edge_case():
+    result = function_to_test("")
+    assert len(result) == 0
+```
+
 ## Development Notes
 
+**FastMCP Behavior:**
+- The `lifespan` context manager only executes on the first request to the server, not during startup
+- This is lazy initialization - server starts listening immediately but doesn't run lifespan until first tool call
+
 **Missing Infrastructure (to be added):**
-- Testing framework (pytest recommended)
 - Code formatting/linting (ruff, black)
 - Type checking (mypy)
 - CI/CD automation
@@ -95,3 +123,5 @@ def find_mcp_server(description: str, example_question: str | None = None) -> di
 - `PRD.md` - Comprehensive product requirements and architecture documentation
 - `.envrc` - Environment configuration with API keys and observability setup
 - `pyproject.toml` - Minimal dependency specification using uv
+- `search.py` - MCP server discovery and parsing logic
+- `search_test.py` - Test suite for search functionality
