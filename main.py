@@ -1,4 +1,3 @@
-import logging
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import AsyncGenerator

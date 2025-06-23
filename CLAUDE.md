@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Keep development journal in @JOURNAL.md. Update it after each major change.
 
+## Note-Taking Guidelines
+
+- When asked to take notes: 1) Fill out @JOURNAL.md; 2) Add only the most important information to @CLAUDE.md 
+
 ## Development Setup
 
 This project uses Python 3.13+ with `uv` as the package manager and `direnv` for environment management.
@@ -50,6 +54,8 @@ See @PRD.md for the product requirements and architecture documentation.
 **Implemented:**
 - MCP server list parser (`search.py:parse_mcp_server_list()`)
 - Comprehensive pytest test suite (`search_test.py`)
+- Custom logging with Rich and Pydantic settings (`settings.py`)
+- FastMCP server integration with lifespan management (`main.py`)
 
 **Not Yet Implemented:**
 - Core MCP discovery logic

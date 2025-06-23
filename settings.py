@@ -21,11 +21,8 @@ app_logger.propagate = False  # Prevent propagation to root logger
 
 if not app_logger.handlers:
     from rich.logging import RichHandler
-    
+
     handler = RichHandler(
-        show_time=False,
-        show_path=False,
-        rich_tracebacks=True,
-        markup=True
+        show_time=False, show_path=False, rich_tracebacks=True, markup=True
     )
     app_logger.addHandler(handler)
