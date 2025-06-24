@@ -1,4 +1,4 @@
-from mcp_db import MCPServerEntry, parse_mcp_server_list
+from .database import MCPServerEntry, parse_mcp_server_list
 
 mcp_server_list = """
 # Model Context Protocol servers

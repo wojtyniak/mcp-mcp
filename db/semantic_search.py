@@ -10,7 +10,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from mcp_db import MCPServerEntry
+from .database import MCPServerEntry
 from settings import app_logger
 
 logger = app_logger.getChild(__name__)

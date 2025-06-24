@@ -5,7 +5,7 @@ from typing import AsyncGenerator
 from mcp.server.fastmcp import FastMCP, Context
 
 from agents import AgentManager
-from mcp_db import MCPDatabase, MCPServerEntry  # noqa: E402
+from db import MCPDatabase, MCPServerEntry  # noqa: E402
 from settings import app_logger
 
 logger = app_logger.getChild(__name__)

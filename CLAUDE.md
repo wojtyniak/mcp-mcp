@@ -52,8 +52,9 @@ See @PRD.md for the product requirements and architecture documentation.
 ## Current Implementation Status
 
 **Implemented:**
-- MCP server list parser (`search.py:parse_mcp_server_list()`)
-- Comprehensive pytest test suite (`search_test.py`)
+- MCP server list parser (`db/database.py:parse_mcp_server_list()`)
+- Semantic search with sentence-transformers (`db/semantic_search.py`)
+- Comprehensive pytest test suite (`db/test_database.py`)
 - Custom logging with Rich and Pydantic settings (`settings.py`)
 - FastMCP server integration with lifespan management (`main.py`)
 - Agent session management with Google ADK (`agents/agents_manager.py`)
@@ -93,11 +94,12 @@ def find_mcp_server(description: str, example_question: str | None = None) -> di
 **Framework:** pytest is configured and working
 
 **Testing Patterns:**
-- Test files follow `*_test.py` naming convention 
+- Test files live next to the modules they test (e.g., `db/test_database.py`)
+- Test files follow `test_*.py` naming convention 
 - Use pytest fixtures and assertions
-- Import modules directly: `from search import parse_mcp_server_list, MCPServerEntry`
+- Import modules using relative imports: `from .database import MCPServerEntry`
 - Test multiple scenarios: normal cases, edge cases, type validation
-- Run tests with: `uv run pytest <test_file> -v`
+- Run tests with: `uv run pytest` (runs all tests) or `uv run pytest db/ -v` (specific module)
 
 **Test Structure Example:**
 ```python
@@ -130,9 +132,10 @@ def test_function_edge_case():
 - `PRD.md` - Comprehensive product requirements and architecture documentation
 - `TASKS.md` - Tasks to be completed
 - `.envrc` - Environment configuration with API keys and observability setup
-- `pyproject.toml` - Minimal dependency specification using uv
-- `search.py` - MCP server discovery and parsing logic
-- `search_test.py` - Test suite for search functionality
+- `pyproject.toml` - Project dependencies and pytest configuration
+- `db/database.py` - MCP server discovery and parsing logic
+- `db/semantic_search.py` - Semantic search using sentence-transformers
+- `db/test_database.py` - Test suite for database functionality
 
 ## Development Philosophy
 

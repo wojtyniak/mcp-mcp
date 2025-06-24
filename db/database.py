@@ -15,7 +15,7 @@ SERVER_LIST_URL = "https://raw.githubusercontent.com/modelcontextprotocol/server
 SERVER_CACHE_TTL = 3 * 60 * 60  # 3 hours in seconds
 
 if TYPE_CHECKING:
-    from semantic_search import SemanticSearchEngine
+    from .semantic_search import SemanticSearchEngine
 
 
 def get_server_cache_dir() -> Path:
@@ -187,7 +187,7 @@ class MCPDatabase:
     async def _initialize_semantic_search(self) -> None:
         """Initialize semantic search engine with fallback to keyword-only search."""
         try:
-            from semantic_search import SemanticSearchEngine
+            from .semantic_search import SemanticSearchEngine
 
             logger.info("Initializing semantic search engine...")
             self.semantic_engine = SemanticSearchEngine()
