@@ -33,7 +33,7 @@ mcp = FastMCP("MCP-MCP", lifespan=app_lifespan)
 @mcp.tool()
 async def greet(name: str):
     logger.debug("greeting %s", name)
-    runner = AgentManager.get_agent_runner("template", "mcp-mcp")
+    runner = AgentManager.get_agent_runner("greeter", "mcp-mcp")
     if runner is None:
         raise ValueError("Runner is None")
     logger.debug(f"sending message to agent {runner.agent.name}")
