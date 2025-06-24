@@ -63,10 +63,8 @@ async def find_mcp_server(description: str, example_question: str | None = None,
     
     mcp_db = _global_mcp_db
     
-    # Build search query from description and example
+    # Use just the description for semantic search (more focused)
     search_query = description
-    if example_question:
-        search_query += " " + example_question
     
     # Search for relevant servers
     results = mcp_db.search(search_query)

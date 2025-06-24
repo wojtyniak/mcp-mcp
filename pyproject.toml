@@ -9,6 +9,7 @@ dependencies = [
     "langfuse>=2,<3",
     "litellm>=1.73.0",
     "rich>=14.0.0",
+    "sentence-transformers>=4.1.0",
 ]
 
 [dependency-groups]
