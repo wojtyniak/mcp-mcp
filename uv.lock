@@ -1077,7 +1077,7 @@ wheels = [
 [[package]]
 name = "mcp-mcp"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "google-adk" },
     { name = "langfuse" },

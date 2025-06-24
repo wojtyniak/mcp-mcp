@@ -161,16 +161,60 @@ async def greet(name: str):
 
 
 def main():
+    import argparse
     import sys
-    # Use stdio transport for testing, http for production
-    transport = "stdio" if len(sys.argv) > 1 and sys.argv[1] == "--stdio" else "streamable-http"
+    
+    parser = argparse.ArgumentParser(
+        description="MCP-MCP: Meta-MCP Server for dynamic MCP server discovery"
+    )
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "http"],
+        default="stdio",
+        help="Transport method (default: stdio for Claude Desktop compatibility)"
+    )
+    parser.add_argument(
+        "--http",
+        action="store_const",
+        const="http",
+        dest="transport",
+        help="Use HTTP transport (equivalent to --transport http)"
+    )
+    parser.add_argument(
+        "--host",
+        default="localhost",
+        help="Host for HTTP transport (default: localhost)"
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port for HTTP transport (default: 8000)"
+    )
+    
+    # Parse args, but handle case where no args provided (for uvx compatibility)
+    try:
+        args = parser.parse_args()
+        transport = "streamable-http" if args.transport == "http" else "stdio"
+    except SystemExit as e:
+        if e.code == 0:  # Help was shown
+            sys.exit(0)
+        # For any parsing errors, default to stdio (uvx compatibility)
+        transport = "stdio"
+        args = None
     
     try:
-        mcp.run(transport=transport)
+        if transport == "streamable-http" and args:
+            logger.info(f"Starting MCP-MCP server on {args.host}:{args.port}")
+            # FastMCP handles host/port internally for HTTP transport
+            mcp.run(transport=transport)
+        else:
+            logger.info("Starting MCP-MCP server with stdio transport")
+            mcp.run(transport=transport)
     except KeyboardInterrupt:
-        print("Shutting down...")
+        logger.info("Shutting down...")
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
         raise e
 
 

@@ -19,6 +19,8 @@ This project uses Python 3.13+ with `uv` as the package manager and `direnv` for
 - `uv add <package>` - Add a dependency
 - `uv run pytest` - Run unit tests
 - `uv run main.py` - Run the application
+- `uv build` - Build package for distribution
+- `uvx mcp-mcp` - Install and run via uvx (end-user command)
 
 **Environment Configuration:**
 The project uses `.envrc` with direnv for automatic environment setup including:
@@ -131,8 +133,10 @@ def test_function_edge_case():
 
 - `PRD.md` - Comprehensive product requirements and architecture documentation
 - `TASKS.md` - Tasks to be completed
+- `INSTALLATION.md` - User installation and configuration guide
 - `.envrc` - Environment configuration with API keys and observability setup
-- `pyproject.toml` - Project dependencies and pytest configuration
+- `pyproject.toml` - Project dependencies, scripts, and pytest configuration
+- `main.py` - FastMCP server entry point with CLI interface
 - `db/database.py` - MCP server discovery and parsing logic
 - `db/semantic_search.py` - Semantic search using sentence-transformers
 - `db/test_database.py` - Test suite for database functionality
