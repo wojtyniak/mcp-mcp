@@ -128,6 +128,7 @@ def test_function_edge_case():
 **Key Files:**
 
 - `PRD.md` - Comprehensive product requirements and architecture documentation
+- `TASKS.md` - Tasks to be completed
 - `.envrc` - Environment configuration with API keys and observability setup
 - `pyproject.toml` - Minimal dependency specification using uv
 - `search.py` - MCP server discovery and parsing logic
