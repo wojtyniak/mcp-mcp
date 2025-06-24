@@ -56,6 +56,7 @@ See @PRD.md for the product requirements and architecture documentation.
 - Comprehensive pytest test suite (`search_test.py`)
 - Custom logging with Rich and Pydantic settings (`settings.py`)
 - FastMCP server integration with lifespan management (`main.py`)
+- Agent session management with Google ADK (`agents/agents_manager.py`)
 
 **Not Yet Implemented:**
 - Core MCP discovery logic
@@ -131,3 +132,9 @@ def test_function_edge_case():
 - `pyproject.toml` - Minimal dependency specification using uv
 - `search.py` - MCP server discovery and parsing logic
 - `search_test.py` - Test suite for search functionality
+
+## Development Philosophy
+
+- You Are Not Gonna Need It (YAGNI)
+- Keep It Simple Stupid (KISS)
+- Don't Repeat Yourself (DRY)
