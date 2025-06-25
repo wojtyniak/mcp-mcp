@@ -1,6 +1,6 @@
 [project]
 name = "mcp-mcp"
-version = "0.0.1"
+dynamic = ["version"]
 description = "MCP-MCP: Meta-MCP Server for dynamic MCP server discovery and provisioning"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -38,14 +38,22 @@ mcp-mcp = "main:main"
 include = ["db*", "agents*"]
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools_scm]
+write_to = "version.py"
+version_scheme = "python-simplified-semver"
+local_scheme = "no-local-version"
 [tool.setuptools]
 py-modules = ["main", "settings"]
 
 [dependency-groups]
-dev = ["pytest-asyncio>=1.0.0", "watchfiles>=1.1.0"]
+dev = [
+    "pytest-asyncio>=1.0.0",
+ "twine>=6.1.0",
+ "watchfiles>=1.1.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = [".", "db", "agents"]
