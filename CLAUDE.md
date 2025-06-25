@@ -137,6 +137,9 @@ def test_function_edge_case():
 - The `lifespan` context manager only executes on the first request to the server, not during startup
 - This is lazy initialization - server starts listening immediately but doesn't run lifespan until first tool call
 
+**Known Issues:**
+- **Semantic Search Quality**: Some generic queries (e.g. "Tool for programmatically testing a website") return irrelevant results due to semantic model limitations. Affects queries that don't use specific technical terms. Specific technical queries work well (e.g. "browser automation", "playwright testing").
+
 **Missing Infrastructure (to be added):**
 - Code formatting/linting (ruff, black)
 - Type checking (mypy)

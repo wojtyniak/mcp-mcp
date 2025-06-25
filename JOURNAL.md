@@ -249,6 +249,24 @@
 - **Logging Enhancement**: Now shows "with README" or "without README" in search results
 - **Test Coverage**: Added specific test `test_find_mcp_tool_prefers_server_with_readme` to validate behavior
 
+### Semantic Search Quality Analysis - Issue Documentation ✅
+- **Problem**: Generic queries like "Tool for programmatically testing a website" return irrelevant results (database servers instead of browser testing tools)
+- **Root Cause Analysis**: 
+  - Semantic model (`all-MiniLM-L6-v2`) finds unexpected connections between "programmatically testing" and "database operations"
+  - Generic phrasing lacks specific technical terminology that works well with semantic search
+  - Model training bias toward certain domain associations
+- **Investigation Results**:
+  - **Works Well**: Specific queries like "browser automation", "playwright testing", "puppeteer" return correct results
+  - **Fails**: Generic queries like "programmatically testing website", "process images", "convert audio files"
+  - **Available Tools**: Confirmed relevant servers exist (Puppeteer, Playwright, BrowserStack, etc.) but aren't found by semantic search
+- **Attempted Solution**: Built comprehensive query enhancement system with intent recognition patterns
+  - Created `db/query_enhancement.py` with 12+ domain patterns (web testing, image processing, authentication, etc.)
+  - Implemented query boosting and category preferences
+  - Complex pattern matching for detecting user intent
+- **Decision**: Decided against implementing complex pattern-based enhancement system due to maintenance complexity
+- **Resolution**: Documented as known issue in CLAUDE.md for future improvement
+- **Impact**: PoC functionality remains complete, but some queries may return suboptimal results until better semantic approach is implemented
+
 ## 06/24/2025
 ### Simplified Agent Session Management  
 - **Problem**: Attempted complex session reuse logic but service needs to be idempotent
