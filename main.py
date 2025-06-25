@@ -174,37 +174,90 @@ async def find_mcp_tool(
             "suggestions": "Try a different search term or check the available server categories",
         }
 
-    # Return top result with configuration options
-    top_server = results[0]
+    # Find the best server with README content
+    primary_server = None
+    primary_readme = None
+    alternatives = []
 
-    # Fetch README content for the top server
-    readme_content = await _fetch_readme_content(top_server.url)
+    # Try to fetch README for top results until we find one with documentation
+    for i, server in enumerate(results[:4]):  # Check top 4 results
+        readme_content = await _fetch_readme_content(server.url)
+        
+        if primary_server is None:
+            # First server becomes primary regardless of README
+            primary_server = server
+            primary_readme = readme_content
+            
+            # If first server has README, we're done with primary selection
+            if readme_content:
+                # Add remaining servers as alternatives without README
+                for alt_server in results[1:4]:
+                    alternatives.append({
+                        "name": alt_server.name,
+                        "description": alt_server.description,
+                        "url": alt_server.url,
+                        "category": alt_server.category,
+                        "readme": None,
+                    })
+                break
+        else:
+            # Add to alternatives
+            alternatives.append({
+                "name": server.name,
+                "description": server.description,
+                "url": server.url,
+                "category": server.category,
+                "readme": None,
+            })
+            
+            # If primary doesn't have README but this one does, promote it to primary
+            if primary_readme is None and readme_content:
+                # Demote current primary to alternatives
+                alternatives.insert(0, {
+                    "name": primary_server.name,
+                    "description": primary_server.description,
+                    "url": primary_server.url,
+                    "category": primary_server.category,
+                    "readme": None,
+                })
+                
+                # Promote this server to primary
+                primary_server = server
+                primary_readme = readme_content
+                
+                # Remove the newly promoted server from alternatives
+                alternatives.pop()
+                break
+
+    # Fill alternatives up to 3 if we don't have enough
+    if len(alternatives) < 3:
+        start_idx = 1 if primary_server == results[0] else 2
+        for alt_server in results[start_idx:4]:
+            if len(alternatives) >= 3:
+                break
+            if alt_server != primary_server:
+                alternatives.append({
+                    "name": alt_server.name,
+                    "description": alt_server.description,
+                    "url": alt_server.url,
+                    "category": alt_server.category,
+                    "readme": None,
+                })
 
     response = {
         "status": "found",
         "server": {
-            "name": top_server.name,
-            "description": top_server.description,
-            "url": top_server.url,
-            "category": top_server.category,
-            "readme": readme_content,
+            "name": primary_server.name,
+            "description": primary_server.description,
+            "url": primary_server.url,
+            "category": primary_server.category,
+            "readme": primary_readme,
         },
-        "alternatives": [],
+        "alternatives": alternatives[:3],  # Ensure max 3 alternatives
     }
 
-    # Include up to 3 alternative servers (without README for performance)
-    for alt_server in results[1:4]:
-        response["alternatives"].append(
-            {
-                "name": alt_server.name,
-                "description": alt_server.description,
-                "url": alt_server.url,
-                "category": alt_server.category,
-                "readme": None,  # Don't fetch README for alternatives to improve performance
-            }
-        )
-
-    logger.info(f"Found {len(results)} servers, returning: {top_server.name}")
+    readme_status = "with README" if primary_readme else "without README"
+    logger.info(f"Found {len(results)} servers, returning: {primary_server.name} ({readme_status})")
     return response
 
 

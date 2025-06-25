@@ -105,6 +105,36 @@ class TestFindMCPTool:
                 assert "url" in alt
                 assert "category" in alt
 
+    @pytest.mark.asyncio
+    async def test_find_mcp_tool_prefers_server_with_readme(self, mock_database):
+        """Test that server with README is preferred over one without."""
+        # Setup servers where first doesn't have README but second does
+        servers = [
+            MCPServerEntry("no-readme-server", "Server without README", "https://example.com/no-readme", "reference"),
+            MCPServerEntry("with-readme-server", "Server with README", "https://github.com/test/with-readme", "reference"),
+            MCPServerEntry("another-server", "Another server", "https://github.com/test/another", "community"),
+        ]
+        
+        mock_database.search.return_value = servers
+
+        def mock_fetch_readme(url):
+            if "with-readme" in url:
+                return "# Server with README\nComplete documentation here."
+            return None  # No README for other URLs
+
+        with patch('main._global_mcp_db', mock_database):
+            with patch('main._fetch_readme_content', side_effect=mock_fetch_readme):
+                result = await find_mcp_tool("test functionality")
+
+            # Should prefer the server with README even though it's not first
+            assert result["status"] == "found"
+            assert result["server"]["name"] == "with-readme-server"
+            assert result["server"]["readme"] == "# Server with README\nComplete documentation here."
+            
+            # The originally top-ranked server should be in alternatives
+            alt_names = [alt["name"] for alt in result["alternatives"]]
+            assert "no-readme-server" in alt_names
+
 
 class TestFetchReadmeContent:
     """Test the _fetch_readme_content function."""

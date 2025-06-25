@@ -234,6 +234,21 @@
   - Response structure consistency across all scenarios
 - **Performance Validation**: Cache effectiveness (2x+ speedup), sub-second search times
 
+### README Preference Enhancement - Improved User Experience ✅
+- **Problem**: If the top-ranked server didn't have a README, users would get no documentation
+- **Solution**: Enhanced algorithm to prefer servers with available README content over purely relevance-based ranking
+- **Implementation**:
+  - **Smart README Selection**: Check top 4 results for README availability
+  - **Promotion Logic**: If top result has no README but alternative does, promote the documented server to primary
+  - **Fallback Behavior**: If no servers have README, still return the most relevant server
+  - **Efficient Fetching**: Only fetch README for candidates, not all alternatives
+- **User Experience Impact**:
+  - **Better Documentation**: Users more likely to receive complete setup instructions
+  - **Informed Decisions**: Primary result includes actionable documentation when available
+  - **Maintained Relevance**: Still prioritizes semantic relevance while favoring documented servers
+- **Logging Enhancement**: Now shows "with README" or "without README" in search results
+- **Test Coverage**: Added specific test `test_find_mcp_tool_prefers_server_with_readme` to validate behavior
+
 ## 06/24/2025
 ### Simplified Agent Session Management  
 - **Problem**: Attempted complex session reuse logic but service needs to be idempotent
