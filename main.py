@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import AsyncGenerator
 
-from mcp.server.fastmcp import FastMCP, Context
+from mcp.server.fastmcp import Context, FastMCP
 
 from agents import AgentManager
 from db import MCPDatabase, MCPServerEntry  # noqa: E402
@@ -12,6 +12,7 @@ logger = app_logger.getChild(__name__)
 
 # Global database instance
 _global_mcp_db: MCPDatabase | None = None
+
 
 @dataclass
 class AppContext:
@@ -35,78 +36,120 @@ mcp = FastMCP("MCP-MCP", lifespan=app_lifespan)
 
 
 @mcp.tool()
-async def find_mcp_server(description: str, example_question: str | None = None, ctx: Context = None) -> dict:
+async def find_mcp_tool(
+    description: str, example_question: str | None = None, ctx: Context = None
+) -> dict:
     """
-    Look for an MCP server that can provide the requested functionality.
+    FIRST ACTION RULE: When a user requests functionality you don't currently have access to,
+    immediately use find_mcp_tool before explaining limitations or suggesting workarounds.
 
-    Example usage:
-    find_mcp_server(
-        description="Find weather forecast for a given location",
-        example_question="What is the weather in Tokyo, Japan, for the next 7 days?")
+    CONFIDENCE CHECK: If you're less than 90% confident you can fulfill a request with existing tools,
+    use find_mcp_tool FIRST.
 
-    find_mcp_server(
-        description="Check domain availability",
-        example_question="Is example.com available?")
+    IMMEDIATE SEARCH TRIGGERS:
+    - Real-time data (weather, stocks, crypto, exchange rates, news)
+    - Web scraping, browser automation, or content extraction
+    - Complex calendar operations (recurring events, scheduling, meeting coordination)
+    - File format conversions (PDF, video, audio, image processing)
+    - External service integrations (email sending, SMS, webhooks, messaging platforms)
+    - Database operations (SQL queries, data imports/exports, vector databases)
+    - Domain/DNS/network tools (availability, WHOIS, ping, traceroute)
+    - Social media APIs (posting, analytics, profile data)
+    - Data analysis beyond basic calculations (statistical analysis, ML, visualization)
+    - Geographic/mapping services (geocoding, routing, location data)
+    - Cloud platform management (AWS, Azure, Kubernetes, infrastructure)
+    - Authentication and security operations (OAuth, API keys, security scanning)
+    - Version control beyond basic Git (advanced operations, repository management)
+    - Communication platforms (Slack, Discord, Telegram integration)
+    - Blockchain and cryptocurrency operations (wallet management, DeFi interactions)
+    - Code execution in sandboxed environments
+    - Voice/speech generation and processing
+    - Project management and productivity tools integration
+    - Art, culture, and museum database access
+    - Customer data platform queries
+    - Developer tooling: automated testing (Playwright, Selenium), debugging, profiling, performance analysis
+    - Development environments: game engines (Godot, Unity), IDEs, simulators, device testing
+    - Build and deployment: CI/CD pipelines, Docker containers, package management, infrastructure as code
+    - Code quality: linting, formatting, static analysis, security scanning, code review automation
+    - API development: testing, documentation generation, mock servers, API monitoring
+    - Mobile development: iOS/Android tooling, app store integration, device farms
+    - Monitoring and observability: APM, logging systems, error tracking, metrics collection
+    - Any request involving "create", "manage", "integrate", "automate", "query", "scrape", "deploy", "test", "debug", "build", "monitor", or "connect to"
+
+    WORKFLOW:
+    User request → Check confidence → If <90% confident → Use find_mcp_tool → Present solution
+
+    SUCCESS PATTERNS:
+    User: "Create recurring calendar events"
+    → Use find_mcp_tool for calendar integration (don't just create basic iCal)
+
+    User: "What's the weather in Tokyo?"
+    → Use find_mcp_tool for weather server (don't say "I can't access weather")
+
+    User: "Check if example.com is available"
+    → Use find_mcp_tool for domain checker (don't suggest manual checking)
+
+    This tool searches a curated database of MCP servers and returns ready-to-use configuration
+    that the user can immediately add to their Claude setup to gain the requested capability.
 
     Args:
-        description: Natural language description of needed functionality
-        example_question: Example question that would use the capability
+        description: Natural language description of the functionality you need
+        example_question: Example of how you would use this capability (helps with matching)
     """
     logger.info(f"Searching for MCP server: {description}")
-    
+
     # Access the global database instance
     if _global_mcp_db is None:
-        return {
-            "status": "error",
-            "message": "MCP database not initialized"
-        }
-    
+        return {"status": "error", "message": "MCP database not initialized"}
+
     mcp_db = _global_mcp_db
-    
+
     # Use just the description for semantic search (more focused)
     search_query = description
-    
+
     # Search for relevant servers
     results = mcp_db.search(search_query)
-    
+
     if not results:
         return {
             "status": "not_found",
             "message": f"No MCP servers found for: {description}",
-            "suggestions": "Try a different search term or check the available server categories"
+            "suggestions": "Try a different search term or check the available server categories",
         }
-    
+
     # Return top result with configuration options
     top_server = results[0]
-    
+
     response = {
         "status": "found",
         "server": {
             "name": top_server.name,
             "description": top_server.description,
             "url": top_server.url,
-            "category": top_server.category
+            "category": top_server.category,
         },
         "configuration": _generate_configuration_strings(top_server),
-        "alternatives": []
+        "alternatives": [],
     }
-    
+
     # Include up to 3 alternative servers
     for alt_server in results[1:4]:
-        response["alternatives"].append({
-            "name": alt_server.name,
-            "description": alt_server.description,
-            "url": alt_server.url,
-            "category": alt_server.category
-        })
-    
+        response["alternatives"].append(
+            {
+                "name": alt_server.name,
+                "description": alt_server.description,
+                "url": alt_server.url,
+                "category": alt_server.category,
+            }
+        )
+
     logger.info(f"Found {len(results)} servers, returning: {top_server.name}")
     return response
 
 
 def _generate_configuration_strings(server: MCPServerEntry) -> dict:
     """Generate configuration strings for different MCP clients."""
-    
+
     # For servers hosted on GitHub, we need to determine how to run them
     if "github.com" in server.url:
         # Extract repository info from GitHub URL
@@ -115,7 +158,7 @@ def _generate_configuration_strings(server: MCPServerEntry) -> dict:
         if len(parts) >= 2:
             repo_owner = parts[0]
             repo_name = parts[1]
-            
+
             # Determine the server path for MCP servers repository
             if "modelcontextprotocol/servers" in server.url:
                 if "/src/" in server.url:
@@ -125,45 +168,39 @@ def _generate_configuration_strings(server: MCPServerEntry) -> dict:
                     server_name = server.name.lower().replace(" ", "-")
             else:
                 server_name = repo_name
-            
+
             # Generate configurations
             claude_desktop_config = {
                 "mcpServers": {
                     server.name.lower().replace(" ", "-"): {
                         "command": "uvx",
-                        "args": [f"mcp-{server_name}"] if server_name != server.name.lower().replace(" ", "-") else [f"mcp-{server.name.lower().replace(' ', '-')}"],
-                        "env": {}
+                        "args": [f"mcp-{server_name}"]
+                        if server_name != server.name.lower().replace(" ", "-")
+                        else [f"mcp-{server.name.lower().replace(' ', '-')}"],
+                        "env": {},
                     }
                 }
             }
-            
+
             claude_code_config = f"uvx mcp-{server_name}"
-            
+
             return {
                 "claude_desktop": claude_desktop_config,
                 "claude_code": claude_code_config,
                 "manual_setup_url": server.url,
-                "note": "Configuration assumes the server is installable via uvx/npm. Check the server's README for specific setup instructions."
+                "note": "Configuration assumes the server is installable via uvx/npm. Check the server's README for specific setup instructions.",
             }
-    
+
     return {
         "manual_setup_url": server.url,
-        "note": "Please refer to the server's documentation for setup instructions."
+        "note": "Please refer to the server's documentation for setup instructions.",
     }
-
-
-@mcp.tool()
-async def greet(name: str):
-    logger.debug("greeting %s", name)
-    result = await AgentManager.send_message("greeter", f"greet {name}")
-    logger.debug(f"result: {result}")
-    return result
 
 
 def main():
     import argparse
     import sys
-    
+
     parser = argparse.ArgumentParser(
         description="MCP-MCP: Meta-MCP Server for dynamic MCP server discovery"
     )
@@ -171,27 +208,24 @@ def main():
         "--transport",
         choices=["stdio", "http"],
         default="stdio",
-        help="Transport method (default: stdio for Claude Desktop compatibility)"
+        help="Transport method (default: stdio for Claude Desktop compatibility)",
     )
     parser.add_argument(
         "--http",
         action="store_const",
         const="http",
         dest="transport",
-        help="Use HTTP transport (equivalent to --transport http)"
+        help="Use HTTP transport (equivalent to --transport http)",
     )
     parser.add_argument(
         "--host",
         default="localhost",
-        help="Host for HTTP transport (default: localhost)"
+        help="Host for HTTP transport (default: localhost)",
     )
     parser.add_argument(
-        "--port",
-        type=int,
-        default=8000,
-        help="Port for HTTP transport (default: 8000)"
+        "--port", type=int, default=8000, help="Port for HTTP transport (default: 8000)"
     )
-    
+
     # Parse args, but handle case where no args provided (for uvx compatibility)
     try:
         args = parser.parse_args()
@@ -202,7 +236,7 @@ def main():
         # For any parsing errors, default to stdio (uvx compatibility)
         transport = "stdio"
         args = None
-    
+
     try:
         if transport == "streamable-http" and args:
             logger.info(f"Starting MCP-MCP server on {args.host}:{args.port}")
