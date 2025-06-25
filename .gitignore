@@ -1,6 +1,8 @@
 # Project Specific
 .envrc
 .claude
+version.py
+/.env*
 
 
 # =====================================
