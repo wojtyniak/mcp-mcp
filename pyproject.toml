@@ -1,19 +1,21 @@
 [project]
 name = "mcp-mcp"
-version = "0.1.0"
+version = "0.0.1"
 description = "MCP-MCP: Meta-MCP Server for dynamic MCP server discovery and provisioning"
 readme = "README.md"
 requires-python = ">=3.13"
 keywords = ["mcp", "model-context-protocol", "ai", "claude", "server-discovery"]
-authors = [
-    {name = "MCP-MCP Contributors"}
-]
+authors = [{ name = "Wojciech Wojtyniak" }]
+license = "MIT"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Environment :: Console",
 ]
 dependencies = [
     "google-adk>=1.4.2",
@@ -22,6 +24,12 @@ dependencies = [
     "rich>=14.0.0",
     "sentence-transformers>=4.1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/wojtyniak/mcp-mcp"
+Repository = "https://github.com/wojtyniak/mcp-mcp"
+Documentation = "https://github.com/wojtyniak/mcp-mcp#readme"
+Issues = "https://github.com/wojtyniak/mcp-mcp/issues"
 
 [project.scripts]
 mcp-mcp = "main:main"
@@ -37,18 +45,11 @@ build-backend = "setuptools.build_meta"
 py-modules = ["main", "settings"]
 
 [dependency-groups]
-dev = [
-    "pytest-asyncio>=1.0.0",
-    "watchfiles>=1.1.0",
-]
+dev = ["pytest-asyncio>=1.0.0", "watchfiles>=1.1.0"]
 
 [tool.pytest.ini_options]
 testpaths = [".", "db", "agents"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = [
-    "--strict-markers",
-    "--strict-config",
-    "-ra",
-]
+addopts = ["--strict-markers", "--strict-config", "-ra"]
