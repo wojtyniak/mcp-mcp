@@ -134,7 +134,7 @@ uv run pytest
 uv run pytest db/ -v
 
 # Run with coverage
-uv run pytest --cov=db --cov=agents
+uv run pytest --cov=db
 ```
 
 ## Roadmap

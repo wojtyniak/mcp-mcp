@@ -5,7 +5,6 @@ from typing import AsyncGenerator
 import httpx
 from mcp.server.fastmcp import Context, FastMCP
 
-from agents import AgentManager
 from db import MCPDatabase, MCPServerEntry  # noqa: E402
 from settings import app_logger
 

@@ -23,10 +23,7 @@ This project uses Python 3.13+ with `uv` as the package manager and `direnv` for
 - `uvx mcp-mcp` - Install and run via uvx (end-user command)
 
 **Environment Configuration:**
-The project uses `.envrc` with direnv for automatic environment setup including:
-- Langfuse observability integration (host: `http://docks.srv.0x89.net:3000`)
-- API keys loaded from macOS keychain
-- OpenTelemetry tracing configuration
+No special environment configuration required. Uses standard Python/uv project setup.
 
 ## Project Architecture
 
@@ -36,7 +33,7 @@ See @PRD.md for the product requirements and architecture documentation.
 
 **Core Technology Stack:**
 - Python 3.13+ with uv package manager
-- Key dependencies: `litellm`, `langfuse`, `google-adk`
+- Key dependencies: `httpx`, `mcp`, `sentence-transformers`, `rich`, `pydantic-settings`
 - Planned: Docker for server containerization, GitHub API for discovery
 
 **Development Phases (from PRD.md):**
@@ -56,11 +53,11 @@ See @PRD.md for the product requirements and architecture documentation.
 **PoC COMPLETE ✅:**
 - MCP server list parser (`db/database.py:parse_mcp_server_list()`)
 - Semantic search with sentence-transformers (`db/semantic_search.py`)
-- Find MCP server tool with configuration generation (`main.py:find_mcp_server()`)
+- Find MCP server tool with README fetching (`main.py:find_mcp_tool()`)
 - Comprehensive pytest test suite (`db/test_database.py`)
 - Custom logging with Rich and Pydantic settings (`settings.py`)
 - FastMCP server integration with lifespan management (`main.py`)
-- Agent session management with Google ADK (`agents/agents_manager.py`)
+- **README Integration**: Automatic fetching of documentation from GitHub repositories
 - **Production Distribution**: uvx/pipx installation, Claude Desktop integration
 - **Comprehensive Documentation**: README.md with complete user/developer guide
 
@@ -76,8 +73,11 @@ See @PRD.md for the product requirements and architecture documentation.
 
 The server exposes this primary tool:
 ```python
-def find_mcp_server(description: str, example_question: str | None = None) -> dict:
-    """Look for an MCP server that can provide the requested functionality."""
+def find_mcp_tool(description: str, example_question: str | None = None) -> dict:
+    """Look for an MCP server that can provide the requested functionality.
+    
+    Returns server details with complete README documentation for setup instructions.
+    """
 ```
 
 **Discovery Sources (planned):**
@@ -88,10 +88,10 @@ def find_mcp_server(description: str, example_question: str | None = None) -> di
 
 ## Security Considerations
 
-- API keys stored in macOS keychain (not in code)
+- No API keys required for core functionality
 - Docker containers planned for MCP server isolation
 - No privileged container execution
-- Environment variables for configuration secrets
+- README content fetched over HTTPS with timeout protection
 
 ## Testing
 
@@ -131,6 +131,7 @@ def test_function_edge_case():
 - All logging redirected to stderr (not stdout) to avoid interfering with stdin/stdout MCP communication
 - Works properly with Claude Desktop and uvx installations
 - Tool discovery description optimized for proactive AI agent usage
+- README integration provides complete setup documentation
 
 **FastMCP Behavior:**
 - The `lifespan` context manager only executes on the first request to the server, not during startup
@@ -147,9 +148,9 @@ def test_function_edge_case():
 - `README.md` - Comprehensive project documentation, installation, and usage guide
 - `PRD.md` - Product requirements and architecture documentation
 - `TASKS.md` - Tasks to be completed
-- `.envrc` - Environment configuration with API keys and observability setup
 - `pyproject.toml` - Project dependencies, scripts, and pytest configuration
 - `main.py` - FastMCP server entry point with CLI interface
+- `settings.py` - Application settings and logging configuration
 - `db/database.py` - MCP server discovery and parsing logic
 - `db/semantic_search.py` - Semantic search using sentence-transformers
 - `db/test_database.py` - Test suite for database functionality

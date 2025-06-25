@@ -1,16 +1,11 @@
 import logging
-import os
 
-import litellm
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     debug: bool = Field(default=False, description="Debug mode")
-    llm_model: str = Field(
-        default="anthropic/claude-sonnet-4-20250514", description="LLM model to use"
-    )
 
     model_config = SettingsConfigDict(
         env_prefix="MCPMCP_",
@@ -40,9 +35,3 @@ if not app_logger.handlers:
         console=stderr_console
     )
     app_logger.addHandler(handler)
-
-# Langfuse
-
-if os.getenv("LANGFUSE_PUBLIC_KEY") and os.getenv("LANGFUSE_SECRET_KEY"):
-    app_logger.info("Langfuse is enabled")
-    litellm.callbacks = ["langfuse"]

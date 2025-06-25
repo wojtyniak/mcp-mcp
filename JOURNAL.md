@@ -196,6 +196,22 @@
   - More reliable since each server's README contains accurate instructions
 - **Response Format**: Now returns clean structure with server details and complete README content
 
+### Agent System Removal - Architecture Simplification ✅
+- **Problem**: Agent system (google-adk) was unused and added unnecessary complexity
+- **Solution**: Complete removal of agents infrastructure to focus on core MCP server discovery
+- **Key Changes**:
+  - **Removed Dependencies**: google-adk, langfuse, litellm (60+ transitive dependencies)
+  - **Deleted Code**: Entire `agents/` directory with AgentManager and agent templates
+  - **Simplified Imports**: Removed agents import from main.py
+  - **Updated Configuration**: Cleaned pyproject.toml package discovery and test paths
+  - **Reduced Settings**: Removed LLM model configuration and observability setup
+- **Benefits**:
+  - **Faster Installation**: Significantly fewer dependencies to install
+  - **Simpler Codebase**: Focus purely on MCP server discovery functionality
+  - **Reduced Complexity**: No agent session management or LLM integration complexity
+  - **Better Performance**: Faster startup without heavyweight AI SDK initialization
+- **Architecture**: Now purely focused on semantic search and README-based server discovery
+
 ## 06/24/2025
 ### Simplified Agent Session Management  
 - **Problem**: Attempted complex session reuse logic but service needs to be idempotent
