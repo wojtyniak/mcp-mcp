@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import AsyncGenerator
 
+import httpx
 from mcp.server.fastmcp import Context, FastMCP
 
 from agents import AgentManager
@@ -33,6 +34,56 @@ async def app_lifespan(_: FastMCP) -> AsyncGenerator[AppContext]:
 
 
 mcp = FastMCP("MCP-MCP", lifespan=app_lifespan)
+
+
+async def _fetch_readme_content(server_url: str) -> str | None:
+    """Fetch README content from a GitHub repository."""
+    if "github.com" not in server_url:
+        return None
+    
+    try:
+        # Convert GitHub URL to raw content URL
+        # Example: https://github.com/owner/repo/tree/main/path -> https://raw.githubusercontent.com/owner/repo/main/path/README.md
+        parts = server_url.replace("https://github.com/", "").split("/")
+        if len(parts) < 2:
+            return None
+            
+        owner = parts[0]
+        repo = parts[1]
+        
+        # Handle different URL formats
+        if "/tree/" in server_url:
+            # URL with specific path like: https://github.com/modelcontextprotocol/servers/tree/main/src/fetch
+            tree_part = server_url.split("/tree/")[1]
+            branch_and_path = tree_part.split("/", 1)
+            branch = branch_and_path[0]
+            path = branch_and_path[1] if len(branch_and_path) > 1 else ""
+        else:
+            # Simple repo URL
+            branch = "main"
+            path = ""
+        
+        # Try different README file names
+        readme_names = ["README.md", "README.txt", "README", "readme.md", "readme.txt", "readme"]
+        
+        for readme_name in readme_names:
+            if path:
+                readme_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{path}/{readme_name}"
+            else:
+                readme_url = f"https://raw.githubusercontent.com/{owner}/{repo}/{branch}/{readme_name}"
+            
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                response = await client.get(readme_url)
+                if response.status_code == 200:
+                    logger.info(f"Found README: {readme_name}")
+                    return response.text
+        
+        logger.info(f"No README found for {server_url}")
+        return None
+        
+    except Exception as e:
+        logger.warning(f"Failed to fetch README for {server_url}: {e}")
+        return None
 
 
 @mcp.tool()
@@ -89,8 +140,15 @@ async def find_mcp_tool(
     User: "Check if example.com is available"
     → Use find_mcp_tool for domain checker (don't suggest manual checking)
 
-    This tool searches a curated database of MCP servers and returns ready-to-use configuration
-    that the user can immediately add to their Claude setup to gain the requested capability.
+    This tool searches a curated database of MCP servers and returns the complete README 
+    documentation from the repository. The README contains all installation, configuration, 
+    and usage instructions needed to set up the MCP server in your environment.
+
+    IMPORTANT: After finding a server, read the provided README content carefully to understand:
+    - Installation requirements (npm, uvx, pip, etc.)
+    - Configuration steps for Claude Desktop or Claude Code
+    - Required API keys or environment variables
+    - Available tools and their usage
 
     Args:
         description: Natural language description of the functionality you need
@@ -120,6 +178,9 @@ async def find_mcp_tool(
     # Return top result with configuration options
     top_server = results[0]
 
+    # Fetch README content for the top server
+    readme_content = await _fetch_readme_content(top_server.url)
+
     response = {
         "status": "found",
         "server": {
@@ -127,12 +188,12 @@ async def find_mcp_tool(
             "description": top_server.description,
             "url": top_server.url,
             "category": top_server.category,
+            "readme": readme_content,
         },
-        "configuration": _generate_configuration_strings(top_server),
         "alternatives": [],
     }
 
-    # Include up to 3 alternative servers
+    # Include up to 3 alternative servers (without README for performance)
     for alt_server in results[1:4]:
         response["alternatives"].append(
             {
@@ -140,6 +201,7 @@ async def find_mcp_tool(
                 "description": alt_server.description,
                 "url": alt_server.url,
                 "category": alt_server.category,
+                "readme": None,  # Don't fetch README for alternatives to improve performance
             }
         )
 
@@ -147,54 +209,6 @@ async def find_mcp_tool(
     return response
 
 
-def _generate_configuration_strings(server: MCPServerEntry) -> dict:
-    """Generate configuration strings for different MCP clients."""
-
-    # For servers hosted on GitHub, we need to determine how to run them
-    if "github.com" in server.url:
-        # Extract repository info from GitHub URL
-        # Example: https://github.com/modelcontextprotocol/servers/tree/main/src/fetch
-        parts = server.url.replace("https://github.com/", "").split("/")
-        if len(parts) >= 2:
-            repo_owner = parts[0]
-            repo_name = parts[1]
-
-            # Determine the server path for MCP servers repository
-            if "modelcontextprotocol/servers" in server.url:
-                if "/src/" in server.url:
-                    server_path = server.url.split("/src/")[1]
-                    server_name = server_path.split("/")[0]
-                else:
-                    server_name = server.name.lower().replace(" ", "-")
-            else:
-                server_name = repo_name
-
-            # Generate configurations
-            claude_desktop_config = {
-                "mcpServers": {
-                    server.name.lower().replace(" ", "-"): {
-                        "command": "uvx",
-                        "args": [f"mcp-{server_name}"]
-                        if server_name != server.name.lower().replace(" ", "-")
-                        else [f"mcp-{server.name.lower().replace(' ', '-')}"],
-                        "env": {},
-                    }
-                }
-            }
-
-            claude_code_config = f"uvx mcp-{server_name}"
-
-            return {
-                "claude_desktop": claude_desktop_config,
-                "claude_code": claude_code_config,
-                "manual_setup_url": server.url,
-                "note": "Configuration assumes the server is installable via uvx/npm. Check the server's README for specific setup instructions.",
-            }
-
-    return {
-        "manual_setup_url": server.url,
-        "note": "Please refer to the server's documentation for setup instructions.",
-    }
 
 
 def main():

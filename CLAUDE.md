@@ -121,6 +121,17 @@ def test_function_edge_case():
 
 ## Development Notes
 
+**PyPI Distribution:**
+- Automated versioning with setuptools-scm (git tags → package versions)
+- PEP 440 compliant development versions (e.g., 0.0.1.dev16)
+- 1Password CLI integration for secure API token management
+- Ready for Test PyPI and production PyPI distribution
+
+**MCP Protocol Compatibility:**
+- All logging redirected to stderr (not stdout) to avoid interfering with stdin/stdout MCP communication
+- Works properly with Claude Desktop and uvx installations
+- Tool discovery description optimized for proactive AI agent usage
+
 **FastMCP Behavior:**
 - The `lifespan` context manager only executes on the first request to the server, not during startup
 - This is lazy initialization - server starts listening immediately but doesn't run lifespan until first tool call
@@ -148,3 +159,7 @@ def test_function_edge_case():
 - You Are Not Gonna Need It (YAGNI)
 - Keep It Simple Stupid (KISS)
 - Don't Repeat Yourself (DRY)
+
+## Dependency Management
+
+- Always use `uv add` to add dependencies

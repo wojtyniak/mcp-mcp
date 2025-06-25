@@ -122,6 +122,80 @@
 - **Use**: "Find me an MCP server for weather data" (natural language)
 - **Get**: Server info + ready-to-use configuration strings for both Claude Desktop & Code
 
+## 06/25/2025
+### PyPI Distribution Setup - Auto-versioning & Test PyPI
+- **Problem**: Package needed proper distribution for uvx/pipx with automated versioning
+- **Solution**: Complete PyPI distribution setup with setuptools-scm for automated versioning
+- **Key Changes**:
+  - **Metadata Enhancement**: Added author info, license, URLs, and comprehensive classifiers
+  - **Automated Versioning**: Implemented setuptools-scm with PEP 440 compliance
+    - Git tags drive version numbers (v0.0.1 → 0.0.1)
+    - Development versions: 0.0.1.dev16 (no local version identifiers for PyPI compatibility)
+    - Configuration: `version_scheme = "python-simplified-semver"`, `local_scheme = "no-local-version"`
+  - **URL Structure**: Fixed pyproject.toml with proper `[project.urls]` section
+  - **License Format**: Updated to modern SPDX format (`license = "MIT"`) per setuptools recommendations
+- **1Password CLI Integration**: Set up secure API token management using `op read` for PyPI uploads
+- **Build Pipeline**: `uv build` produces PEP 440 compliant packages ready for PyPI
+
+### MCP Server Logging Configuration - stdio Transport Fix
+- **Problem**: Logging to stdout interfered with MCP protocol communication over stdin/stdout
+- **Root Cause**: RichHandler defaulted to stdout, corrupting MCP JSON protocol messages
+- **Solution**: Redirected all logging to stderr for MCP compatibility
+  ```python
+  stderr_console = Console(file=sys.stderr, force_terminal=True)
+  handler = RichHandler(console=stderr_console)
+  ```
+- **Impact**: MCP server now works properly with Claude Desktop and uvx installations
+- **Testing**: Confirmed `uv run --project /path mcp-mcp` works without protocol interference
+
+### Enhanced Tool Discovery Description - Developer-Focused Triggers
+- **Problem**: find_mcp_tool wasn't being used proactively by AI agents for developer needs
+- **Solution**: Comprehensive description rewrite with explicit behavioral triggers
+- **Key Improvements**:
+  - **Clear Action Rules**: "FIRST ACTION RULE: When a user requests functionality you don't have access to, immediately use find_mcp_tool"
+  - **Confidence Threshold**: "If you're less than 90% confident you can fulfill a request with existing tools, use find_mcp_tool FIRST"
+  - **Comprehensive Trigger Categories**: 
+    - Real-time data, web scraping, database operations
+    - Developer tooling: automated testing (Playwright, Selenium), debugging, profiling
+    - Development environments: game engines (Godot, Unity), IDEs, simulators
+    - Build/deployment: CI/CD, Docker, package management, infrastructure as code
+    - Code quality: linting, static analysis, security scanning
+    - API development, mobile development, monitoring & observability
+  - **Success Patterns**: Concrete before/after examples showing correct usage
+  - **Action Verbs**: Extended trigger words to include "test", "debug", "build", "monitor", "scrape", "deploy"
+- **Target Audience**: Tech-heavy users and developers (key early adopters)
+- **Behavioral Goal**: Transform from optional discovery tool to mandatory fallback for capability gaps
+
+### README Content Integration - Enhanced Server Discovery ✅
+- **Problem**: Users needed complete documentation to understand MCP server capabilities and setup requirements
+- **Solution**: Added automatic README fetching from GitHub repositories for discovered servers
+- **Key Changes**:
+  - **HTTP Client**: Added httpx dependency for fetching remote content
+  - **README Fetching**: Implemented `_fetch_readme_content()` with intelligent URL parsing
+    - Handles different GitHub URL formats (simple repo vs tree/branch/path)
+    - Tries multiple README file names (README.md, README.txt, readme.md, etc.)
+    - Converts GitHub URLs to raw.githubusercontent.com for direct content access
+  - **Response Enhancement**: Added `readme` field to server response containing full documentation
+  - **Performance Optimization**: Only fetch README for top result, not alternatives
+  - **Error Handling**: Graceful degradation with timeout and exception handling
+- **User Experience**: Users now get complete setup instructions and capabilities overview
+- **Testing**: Verified with real GitHub repositories (mcp-weather server with 5987 characters README)
+
+### Configuration Generation Removal - Simplified User Experience ✅
+- **Problem**: Auto-generated configuration strings were often incorrect and created confusion
+- **Solution**: Removed configuration generation entirely, directing users to README for accurate setup
+- **Key Changes**:
+  - **Removed**: `_generate_configuration_strings()` function and all related code
+  - **Simplified Response**: Eliminated `configuration` field from tool response
+  - **Enhanced Documentation**: Updated tool description to emphasize README-based setup
+  - **Clear Instructions**: Added explicit guidance on what to look for in README content
+- **Benefits**: 
+  - Eliminates incorrect auto-generated configurations
+  - Forces users to read actual documentation (better understanding)
+  - Reduces maintenance burden of guessing installation patterns
+  - More reliable since each server's README contains accurate instructions
+- **Response Format**: Now returns clean structure with server details and complete README content
+
 ## 06/24/2025
 ### Simplified Agent Session Management  
 - **Problem**: Attempted complex session reuse logic but service needs to be idempotent

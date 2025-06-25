@@ -1159,6 +1159,7 @@ name = "mcp-mcp"
 source = { editable = "." }
 dependencies = [
     { name = "google-adk" },
+    { name = "httpx" },
     { name = "langfuse" },
     { name = "litellm" },
     { name = "rich" },
@@ -1175,6 +1176,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "google-adk", specifier = ">=1.4.2" },
+    { name = "httpx", specifier = ">=0.27.0" },
     { name = "langfuse", specifier = ">=2,<3" },
     { name = "litellm", specifier = ">=1.73.0" },
     { name = "rich", specifier = ">=14.0.0" },
