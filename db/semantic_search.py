@@ -161,6 +161,38 @@ class SemanticSearchEngine:
             logger.error(f"Failed to generate embeddings: {e}")
             raise
     
+    async def initialize_with_precomputed_embeddings(
+        self, 
+        servers: list[MCPServerEntry], 
+        precomputed_embeddings: np.ndarray
+    ):
+        """Initialize the semantic search engine with precomputed embeddings."""
+        self.servers = servers
+        self.server_embeddings = precomputed_embeddings
+        
+        # Validate that embeddings match server count
+        if len(servers) != precomputed_embeddings.shape[0]:
+            raise ValueError(
+                f"Server count ({len(servers)}) does not match embeddings count "
+                f"({precomputed_embeddings.shape[0]})"
+            )
+        
+        # Load model for query encoding (still needed for search)
+        if self.model is None:
+            logger.info(f"Loading sentence transformer model: {self.model_name}")
+            try:
+                self.model = SentenceTransformer(self.model_name)
+                logger.info("Model loaded successfully")
+            except Exception as e:
+                logger.error(f"Failed to load model {self.model_name}: {e}")
+                raise
+        
+        # Generate a simple hash for the precomputed data
+        content_hash = f"precomputed_{len(servers)}_{precomputed_embeddings.shape[1]}"
+        self.embeddings_hash = content_hash
+        
+        logger.info(f"Initialized with precomputed embeddings for {len(servers)} servers")
+    
     def semantic_search(
         self, 
         query: str, 

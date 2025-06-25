@@ -155,9 +155,11 @@ async def find_mcp_tool(
     """
     logger.info(f"Searching for MCP server: {description}")
 
-    # Access the global database instance
+    # Access the global database instance, initialize if needed
+    global _global_mcp_db
     if _global_mcp_db is None:
-        return {"status": "error", "message": "MCP database not initialized"}
+        logger.info("Initializing MCP database for direct tool usage...")
+        _global_mcp_db = await MCPDatabase.create()
 
     mcp_db = _global_mcp_db
 
@@ -197,6 +199,7 @@ async def find_mcp_tool(
                         "description": alt_server.description,
                         "url": alt_server.url,
                         "category": alt_server.category,
+                        "source": alt_server.source,
                         "readme": None,
                     })
                 break
@@ -207,6 +210,7 @@ async def find_mcp_tool(
                 "description": server.description,
                 "url": server.url,
                 "category": server.category,
+                "source": server.source,
                 "readme": None,
             })
             
@@ -218,6 +222,7 @@ async def find_mcp_tool(
                     "description": primary_server.description,
                     "url": primary_server.url,
                     "category": primary_server.category,
+                    "source": primary_server.source,
                     "readme": None,
                 })
                 
@@ -241,6 +246,7 @@ async def find_mcp_tool(
                     "description": alt_server.description,
                     "url": alt_server.url,
                     "category": alt_server.category,
+                    "source": alt_server.source,
                     "readme": None,
                 })
 
@@ -251,6 +257,7 @@ async def find_mcp_tool(
             "description": primary_server.description,
             "url": primary_server.url,
             "category": primary_server.category,
+            "source": primary_server.source,
             "readme": primary_readme,
         },
         "alternatives": alternatives[:3],  # Ensure max 3 alternatives

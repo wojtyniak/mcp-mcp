@@ -1,0 +1,108 @@
+name: Update Precomputed Data
+
+on:
+  schedule:
+    # Run every 3 hours
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
+    # Allow manual triggering
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+        
+    - name: Install dependencies
+      run: uv sync
+      
+    - name: Build precomputed data
+      id: build
+      run: |
+        echo "Building precomputed data..."
+        uv run python scripts/build_data.py
+        
+    - name: Check if data changed
+      id: check-changes
+      run: |
+        if [ -f dist/servers.json ]; then
+          echo "Data files found, proceeding with release update"
+          echo "files_exist=true" >> $GITHUB_OUTPUT
+        else
+          echo "No data files found, skipping release update"
+          echo "files_exist=false" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Delete existing data-latest release
+      if: steps.check-changes.outputs.files_exist == 'true'
+      run: |
+        # Delete the existing data-latest release if it exists
+        gh release delete data-latest --yes || true
+        # Delete the tag as well
+        git push origin --delete refs/tags/data-latest || true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Create new data-latest release
+      if: steps.check-changes.outputs.files_exist == 'true'
+      run: |
+        # Create new tag
+        git tag data-latest
+        git push origin data-latest
+        
+        # Create prerelease with data files
+        gh release create data-latest \
+          --title "Precomputed Data (Latest)" \
+          --notes "🤖 **Automated precomputed data release**
+
+        This release contains precomputed MCP server data and embeddings for instant startup.
+
+        **Contents:**
+        - \`servers.json\` - Deduplicated server list from multiple sources
+        - \`embeddings.npz\` - Precomputed semantic embeddings  
+        - \`data_info.json\` - Build metadata and information
+
+        **Data Sources:**
+        - Official MCP Servers (modelcontextprotocol/servers)
+        - Punkpeye Awesome MCP Servers
+        - Appcypher Awesome MCP Servers
+
+        **🔄 Generated:** $(date -u)
+        **📊 Servers:** $(jq -r '.servers_count' dist/data_info.json)
+        **🧠 Model:** $(jq -r '.model_name' dist/data_info.json)
+
+        > This is an automated prerelease that does not represent a software version.
+        > For actual software releases, see the main releases page." \
+          --prerelease \
+          dist/servers.json \
+          dist/embeddings.npz \
+          dist/data_info.json
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Log summary
+      run: |
+        if [ -f dist/data_info.json ]; then
+          echo "✅ Data release updated successfully!"
+          echo "📊 Servers: $(jq -r '.servers_count' dist/data_info.json)"
+          echo "🔗 Download: https://github.com/${{ github.repository }}/releases/download/data-latest/servers.json"
+        else
+          echo "ℹ️ No changes detected, data release not updated"
+        fi
