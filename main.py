@@ -5,6 +5,10 @@ from typing import AsyncGenerator
 
 import httpx
 from mcp.server.fastmcp import Context, FastMCP
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+from starlette.exceptions import HTTPException
 
 from db import MCPDatabase
 from settings import app_logger
@@ -31,6 +35,56 @@ async def app_lifespan(_: FastMCP) -> AsyncGenerator[AppContext]:
         yield AppContext(mcp_db=mcp_db)
     finally:
         pass
+
+
+class OriginValidationMiddleware(BaseHTTPMiddleware):
+    """Middleware to validate Origin headers and prevent DNS rebinding attacks."""
+    
+    def __init__(self, app, allowed_hosts: list[str]):
+        super().__init__(app)
+        self.allowed_origins = set()
+        
+        # Generate allowed origins for both http and https
+        for host in allowed_hosts:
+            if host in ("localhost", "127.0.0.1"):
+                # Add common ports for localhost
+                for port in [8000, 8080, 3000, 5000]:
+                    self.allowed_origins.add(f"http://{host}:{port}")
+                    self.allowed_origins.add(f"https://{host}:{port}")
+                # Also allow without port for default
+                self.allowed_origins.add(f"http://{host}")
+                self.allowed_origins.add(f"https://{host}")
+            else:
+                self.allowed_origins.add(f"http://{host}")
+                self.allowed_origins.add(f"https://{host}")
+    
+    async def dispatch(self, request: Request, call_next):
+        # Check Origin header if present
+        origin = request.headers.get("origin")
+        if origin is not None:
+            if origin not in self.allowed_origins:
+                logger.warning(f"Rejected request with invalid origin: {origin}")
+                return Response(
+                    content="Forbidden: Invalid origin header",
+                    status_code=403,
+                    headers={"Content-Type": "text/plain"}
+                )
+        
+        # Check Host header as additional protection
+        host = request.headers.get("host")
+        if host is not None:
+            # Extract hostname from host header (remove port if present)
+            hostname = host.split(":")[0]
+            # Allow localhost and 127.0.0.1 for local development
+            if hostname not in ("localhost", "127.0.0.1"):
+                logger.warning(f"Rejected request with invalid host: {host}")
+                return Response(
+                    content="Forbidden: Invalid host header", 
+                    status_code=403,
+                    headers={"Content-Type": "text/plain"}
+                )
+        
+        return await call_next(request)
 
 
 mcp = FastMCP("MCP-MCP", lifespan=app_lifespan)
@@ -329,6 +383,23 @@ def main():
     try:
         if transport == "streamable-http" and args:
             logger.info(f"Starting MCP-MCP server on {args.host}:{args.port}")
+            
+            # Security warning for non-localhost hosts
+            if args.host not in ("localhost", "127.0.0.1"):
+                logger.warning(f"⚠️  SECURITY WARNING: Binding to {args.host} exposes server to network!")
+                logger.warning("⚠️  Origin validation will still restrict to localhost origins only.")
+                logger.warning("⚠️  For security, use --host localhost (default) for local development.")
+            
+            # Add Origin validation middleware for security
+            # Always restrict to localhost/127.0.0.1 regardless of --host argument
+            app = mcp.streamable_http_app()
+            app.add_middleware(OriginValidationMiddleware, allowed_hosts=["localhost", "127.0.0.1"])
+            logger.info("Added Origin validation middleware for security (localhost only)")
+            
+            # Build the middleware stack  
+            app.build_middleware_stack()
+            logger.info("Built middleware stack")
+            
             # FastMCP handles host/port internally for HTTP transport
             mcp.run(transport=transport)
         else:
