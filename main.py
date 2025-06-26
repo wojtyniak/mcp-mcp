@@ -275,8 +275,19 @@ def main():
     import argparse
     import sys
 
+    # Try to import version, fallback to unknown if not available
+    try:
+        from version import version as __version__
+    except ImportError:
+        __version__ = "unknown"
+
     parser = argparse.ArgumentParser(
         description="MCP-MCP: Meta-MCP Server for dynamic MCP server discovery"
+    )
+    parser.add_argument(
+        "--version", "-v",
+        action="version",
+        version=f"mcp-mcp {__version__}"
     )
     parser.add_argument(
         "--transport",
