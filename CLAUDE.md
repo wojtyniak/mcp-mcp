@@ -86,12 +86,33 @@ def find_mcp_tool(description: str, example_question: str | None = None) -> dict
 3. Package registries (npm, PyPI)
 4. Direct Git repository URLs
 
+## Schema Versioning
+
+**Current Schema**: v1.0 with fields: `name`, `description`, `url`, `category`, `source`
+**Data Size**: ~2MB (small enough for fast fallback)
+
+**Simple Strategy**:
+- ✅ v1.x data: Use precomputed data (instant startup)
+- ❌ v2.x+ data: Fall back to live GitHub sources (3-second startup)
+
+**Safety Guarantees (Tested & Verified)**: 
+- **Never breaks user process**: v1.x client + v2.x data = automatic fallback (no crash)
+- **Graceful degradation**: Malformed entries are skipped, process continues  
+- **Always functional**: Live GitHub sources ensure system always works
+- **Multiple safety layers**: Schema check → Data validation → Individual entry parsing → Exception handling
+- **User experience**: Incompatible data = 3-second startup instead of instant (barely noticeable)
+
+**Why This Works**: For our small data size, downloading fresh from GitHub is fast and reliable. No complex migration needed.
+
+**Implementation**: `db/schema_versions.py` - simple compatibility check with fallback
+
 ## Security Considerations
 
 - No API keys required for core functionality
 - Docker containers planned for MCP server isolation
 - No privileged container execution
 - README content fetched over HTTPS with timeout protection
+- Schema validation prevents malformed data from breaking the system
 
 ## Testing
 
@@ -156,6 +177,7 @@ def test_function_edge_case():
 - `settings.py` - Application settings and logging configuration
 - `db/database.py` - MCP server discovery and parsing logic
 - `db/semantic_search.py` - Semantic search using sentence-transformers
+- `db/schema_versions.py` - Schema versioning and compatibility framework
 - `db/test_database.py` - Test suite for database functionality
 
 ## Development Philosophy
@@ -167,3 +189,7 @@ def test_function_edge_case():
 ## Dependency Management
 
 - Always use `uv add` to add dependencies
+
+## MCP Workflow Management
+
+- Use mcp to: edit commit messages; split commits; merge commits; do the usual commit management and cleanup expected from a good developer

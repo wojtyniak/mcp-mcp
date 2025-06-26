@@ -27,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from db.database import MCPServerEntry, deduplicate_servers
 from db.sources import get_all_sources
 from db.semantic_search import SemanticSearchEngine, DEFAULT_MODEL, EMBEDDINGS_VERSION
+from db.schema_versions import CURRENT_SCHEMA_VERSION
 from settings import app_logger
 
 logger = app_logger.getChild(__name__)
@@ -155,18 +156,30 @@ def find_changed_servers(
     
     # Create mapping from hash to index for previous servers
     previous_hash_to_index = {}
+    previous_hashes = set()
     for i, server in enumerate(previous_servers):
         server_hash = compute_server_hash(server)
         previous_hash_to_index[server_hash] = i
+        previous_hashes.add(server_hash)
     
-    # Find which current servers need new embeddings
+    # Create mapping for current servers
+    current_hashes = set()
     changed_indices = []
     for i, server in enumerate(current_servers):
         server_hash = compute_server_hash(server)
+        current_hashes.add(server_hash)
         if server_hash not in previous_hash_to_index:
             changed_indices.append(i)
     
-    logger.info(f"Found {len(changed_indices)} changed/new servers out of {len(current_servers)} total")
+    # Track removed and added servers for monitoring
+    removed_servers = previous_hashes - current_hashes
+    added_servers = current_hashes - previous_hashes
+    
+    logger.info(f"Server changes: {len(added_servers)} added, {len(removed_servers)} removed, {len(changed_indices)} total changed/new")
+    if removed_servers:
+        logger.info(f"Removed {len(removed_servers)} servers (embeddings will be discarded)")
+    if added_servers:
+        logger.info(f"Added {len(added_servers)} new servers (embeddings will be generated)")
     
     return changed_indices, previous_hash_to_index
 
@@ -286,6 +299,7 @@ async def build_data() -> dict:
         "embeddings_shape": list(embeddings.shape),
         "model_name": DEFAULT_MODEL,
         "embeddings_version": EMBEDDINGS_VERSION,
+        "schema_version": CURRENT_SCHEMA_VERSION,
         "build_timestamp": time.time(),
         "build_date": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
         "sources": [source.name for source in get_all_sources()]

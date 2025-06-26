@@ -11,6 +11,12 @@ import numpy as np
 
 from settings import app_logger
 
+# Import schema version management
+from .schema_versions import (
+    is_version_compatible, validate_data_format, get_compatibility_message, 
+    CompatibilityLevel
+)
+
 logger = app_logger.getChild(__name__)
 
 SERVER_LIST_URL = "https://raw.githubusercontent.com/modelcontextprotocol/servers/refs/heads/main/README.md"
@@ -246,8 +252,49 @@ class MCPDatabase:
         
         logger.info(f"Total: {len(self.servers)} unique servers (from {len(all_servers)} raw entries)")
     
+    async def _check_schema_compatibility(self) -> Optional[dict]:
+        """Check if precomputed data schema is compatible with this client version."""
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(PRECOMPUTED_DATA_INFO_URL)
+                
+                if response.status_code == 200:
+                    data_info = response.json()
+                    
+                    # Validate data format
+                    validation_error = validate_data_format(data_info)
+                    if validation_error:
+                        logger.warning(f"Invalid data format: {validation_error}")
+                        return None
+                    
+                    schema_version = data_info.get("schema_version", "1.0")  # Default for legacy
+                    compatibility = is_version_compatible(schema_version)
+                    
+                    # Log compatibility status
+                    compat_message = get_compatibility_message(schema_version)
+                    if compatibility == CompatibilityLevel.COMPATIBLE:
+                        logger.debug(compat_message)
+                        return data_info
+                    else:
+                        logger.info(compat_message)
+                        return None  # Fall back to live sources
+                        
+                else:
+                    logger.debug(f"Data info not available (HTTP {response.status_code})")
+                    return None
+                    
+        except Exception as e:
+            logger.debug(f"Could not check schema compatibility: {e}")
+            return None
+    
     async def _load_precomputed_servers(self) -> Optional[list[MCPServerEntry]]:
-        """Load precomputed servers from GitHub releases."""
+        """Load precomputed servers from GitHub releases with schema compatibility checking."""
+        # Check schema compatibility first
+        data_info = await self._check_schema_compatibility()
+        if data_info is None:
+            logger.info("Skipping precomputed data due to schema incompatibility")
+            return None
+        
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 logger.debug("Attempting to download precomputed servers...")
@@ -256,13 +303,25 @@ class MCPDatabase:
                 if response.status_code == 200:
                     servers_data = response.json()
                     servers = []
-                    for server_dict in servers_data:
-                        # Handle missing source field for backward compatibility
-                        if 'source' not in server_dict:
-                            server_dict['source'] = 'unknown'
-                        servers.append(MCPServerEntry(**server_dict))
                     
-                    logger.debug(f"Downloaded {len(servers)} precomputed servers")
+                    for server_dict in servers_data:
+                        try:
+                            # Handle missing source field for backward compatibility
+                            if 'source' not in server_dict:
+                                server_dict['source'] = 'unknown'
+                            servers.append(MCPServerEntry(**server_dict))
+                        except Exception as e:
+                            # If any server entry fails to parse, log and skip it
+                            # Don't let one bad entry break the entire process
+                            logger.warning(f"Skipping malformed server entry: {e}")
+                            continue
+                    
+                    if not servers:
+                        # If no servers could be parsed, fall back to live sources
+                        logger.warning("No valid servers found in precomputed data, falling back to live sources")
+                        return None
+                    
+                    logger.debug(f"Downloaded {len(servers)} precomputed servers (schema v{data_info.get('schema_version', 'unknown')})")
                     return servers
                 else:
                     logger.debug(f"Precomputed servers not available (HTTP {response.status_code})")
@@ -273,7 +332,13 @@ class MCPDatabase:
             return None
     
     async def _load_precomputed_embeddings(self) -> Optional[np.ndarray]:
-        """Load precomputed embeddings from GitHub releases."""
+        """Load precomputed embeddings from GitHub releases with schema compatibility checking."""
+        # Check schema compatibility first
+        data_info = await self._check_schema_compatibility()
+        if data_info is None:
+            logger.info("Skipping precomputed embeddings due to schema incompatibility")
+            return None
+        
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 logger.debug("Attempting to download precomputed embeddings...")
@@ -290,7 +355,7 @@ class MCPDatabase:
                     # Clean up temporary file
                     temp_file.unlink()
                     
-                    logger.debug(f"Downloaded precomputed embeddings: {embeddings.shape}")
+                    logger.debug(f"Downloaded precomputed embeddings: {embeddings.shape} (schema v{data_info.get('schema_version', 'unknown')})")
                     return embeddings
                 else:
                     logger.debug(f"Precomputed embeddings not available (HTTP {response.status_code})")
