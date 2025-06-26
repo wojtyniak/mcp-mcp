@@ -3,7 +3,7 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**MCP-MCP** is a Meta-MCP Server that acts as a tool discovery and provisioning service for the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). When an AI assistant needs a capability that isn't currently available, it can ask MCP-MCP to discover and suggest appropriate MCP servers from a comprehensive database of 800+ servers.
+**MCP-MCP** is a Meta-MCP Server that acts as a tool discovery and provisioning service for the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). When an AI assistant needs a capability that isn't currently available, it can ask MCP-MCP to discover and suggest appropriate MCP servers from a comprehensive database of over a thousand servers aggregated from multiple curated sources.
 
 ## Quick Start
 
@@ -140,8 +140,8 @@ uv run pytest --cov=db
 ## Roadmap
 
 ### Current Status: PoC Complete
-- ✅ Single-source discovery (MCP server lists)
-- ✅ Semantic search with caching
+- ✅ Multi-source discovery (3 curated MCP server lists)
+- ✅ Semantic search with precomputed embeddings
 - ✅ Configuration string generation
 - ✅ FastMCP integration
 
@@ -183,7 +183,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Model Context Protocol](https://modelcontextprotocol.io/) team at Anthropic
 - Open source MCP server maintainers and contributors
 - MCP Server Lists:
-  - [MCP Server List](https://github.com/modelcontextprotocol/servers)
+  - [Official MCP Servers](https://github.com/modelcontextprotocol/servers)
+  - [Punkpeye's Awesome MCP Servers](https://github.com/punkpeye/awesome-mcp-servers)
+  - [Appcypher's Awesome MCP Servers](https://github.com/appcypher/awesome-mcp-servers)
 
 ---
 
