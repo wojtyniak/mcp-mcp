@@ -15,7 +15,16 @@ run-stdio:
 test:
     uv run pytest
 
+test-unit:
+    uv run pytest db/
+
 test-integration:
+    uv run pytest tests/
+
+test-integration-github:
+    MCP_MCP_TEST_GITHUB_INTEGRATION=1 uv run pytest tests/
+
+test-all:
     MCP_MCP_TEST_GITHUB_INTEGRATION=1 uv run pytest
 
 # Building

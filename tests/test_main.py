@@ -8,6 +8,10 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 import httpx
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from main import find_mcp_tool, _fetch_readme_content, _global_mcp_db
 from db import MCPServerEntry
 

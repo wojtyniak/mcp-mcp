@@ -22,14 +22,6 @@ Why make agents (and users) hunt for tools when we can bring the tools to them?
 
 ## Quick Start
 
-### Install via uvx (Recommended)
-
-```bash
-uvx mcp-mcp
-```
-
-This installs and runs the MCP-MCP server directly via uvx.
-
 ## Claude Desktop Configuration
 
 Add MCP-MCP to your Claude Desktop configuration file:
@@ -70,6 +62,7 @@ Add MCP-MCP to your Claude Code configuration file:
 ```bash
 claude mcp add mcp-mcp uvx mcp-mcp
 ```
+
 ## Usage Examples
 
 Once configured, you can ask Claude Desktop to discover MCP servers using natural language:
@@ -86,6 +79,7 @@ Once configured, you can ask Claude Desktop to discover MCP servers using natura
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) package manager
 - [direnv](https://direnv.net/) (optional, for automatic environment setup)
+- [just](https://just.systems/) (optional, for convenient development commands)
 
 ### Setup
 
@@ -104,6 +98,46 @@ uv run pytest
 uv run main.py
 ```
 
+### Install via uvx (for testing)
+
+For testing the installed package:
+
+```bash
+uvx mcp-mcp
+```
+
+This installs and runs the MCP-MCP server directly via uvx.
+
+### Development Commands (with justfile)
+
+This project includes a `justfile` for common development tasks:
+
+```bash
+# List all available commands
+just help
+
+# Development with auto-reload
+just dev      # STDIO mode with file watching
+just dev-http # HTTP mode with file watching
+
+# Running without auto-reload
+just run-stdio # STDIO mode
+just run-http  # HTTP mode
+
+# Testing
+just test             # Unit tests only
+just test-integration # Include GitHub integration tests
+
+# Building and publishing
+just build           # Build package
+just publish-test    # Publish to Test PyPI
+just publish-prod    # Publish to Production PyPI
+
+# Utilities
+just version # Show version
+just clean   # Clean build artifacts
+```
+
 ### Development Mode
 
 For development and testing, use HTTP transport (easier to stop with Ctrl+C):
@@ -111,12 +145,22 @@ For development and testing, use HTTP transport (easier to stop with Ctrl+C):
 ```bash
 # HTTP mode (accessible at http://localhost:8000)
 uv run main.py --http
+# OR with justfile:
+just run-http
+
+# With auto-reload during development
+just dev-http
 
 # Custom host/port
 uv run main.py --http --host 0.0.0.0 --port 3000
 
 # STDIO mode (for MCP clients like Claude Desktop)
 uv run main.py  # Note: To stop STDIO mode, use Ctrl+D (EOF), not Ctrl+C
+# OR with justfile:
+just run-stdio
+
+# With auto-reload during development
+just dev
 ```
 
 ### Building
@@ -124,6 +168,8 @@ uv run main.py  # Note: To stop STDIO mode, use Ctrl+D (EOF), not Ctrl+C
 ```bash
 # Build package
 uv build
+# OR with justfile:
+just build
 
 # Test local installation
 uvx --from ./dist/mcp_mcp-0.1.0-py3-none-any.whl mcp-mcp
@@ -145,18 +191,38 @@ mcp-mcp --help
 ## Testing
 
 ```bash
-# Run all unit tests (fast, no network)
+# Run all tests (unit + integration)
 uv run pytest
+# OR with justfile:
+just test
 
-# Run specific module tests
+# Run only unit tests (fast, no network)
 uv run pytest db/ -v
+# OR with justfile:
+just test-unit
+
+# Run only integration/e2e tests
+uv run pytest tests/ -v
+# OR with justfile:
+just test-integration
 
 # Run GitHub integration tests (optional, requires network)
-MCP_MCP_TEST_GITHUB_INTEGRATION=1 uv run pytest db/test_precomputed_data_workflow.py::test_real_github_download -v -s
+MCP_MCP_TEST_GITHUB_INTEGRATION=1 uv run pytest tests/
+# OR with justfile:
+just test-integration-github
+
+# Run all tests including GitHub integration
+MCP_MCP_TEST_GITHUB_INTEGRATION=1 uv run pytest
+# OR with justfile:
+just test-all
 
 # Run with coverage
 uv run pytest --cov=db
 ```
+
+**Test Structure**:
+- **Unit Tests**: Located in `db/` alongside the code they test (Go-style)
+- **Integration/E2E Tests**: Located in `tests/` directory
 
 **Integration Tests**: Set `MCP_MCP_TEST_GITHUB_INTEGRATION=1` to test real GitHub downloads and verify the complete first-user onboarding experience. These tests ensure users get fast startup (< 5 seconds) with 1296+ servers.
 

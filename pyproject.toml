@@ -52,7 +52,7 @@ py-modules = ["main", "settings"]
 dev = ["pytest-asyncio>=1.0.0", "twine>=6.1.0", "watchfiles>=1.1.0"]
 
 [tool.pytest.ini_options]
-testpaths = [".", "db"]
+testpaths = ["tests", "db"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

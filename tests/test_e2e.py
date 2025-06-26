@@ -9,6 +9,10 @@ import pytest_asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from main import find_mcp_tool, app_lifespan, FastMCP, AppContext
 from db import MCPDatabase
 
