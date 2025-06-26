@@ -3,7 +3,22 @@
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+![MCP-MCP: An MCP server that helps discover other MCP servers](assets/matryoshka.jpg)
+
 **MCP-MCP** is a Meta-MCP Server that acts as a tool discovery and provisioning service for the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). When an AI assistant needs a capability that isn't currently available, it can ask MCP-MCP to discover and suggest appropriate MCP servers from a comprehensive database of over a thousand servers aggregated from multiple curated sources.
+
+Think of it as a "phone book" for MCP servers - one tool to find all other tools.
+
+## Motivation
+
+**Agents Just Wanna Have Tools** 
+
+- **Agents know what they need**: AI assistants can clearly articulate requirements like "check domain availability" or "get weather data"
+- **Web search isn't always enough**: Generic search results don't always provide realtime data
+- **CLI tools require setup**: Many tools need complex installation, configuration, and API keys - agents have to repeat this setup every single time they need to complete a task
+- **MCP servers are scattered**: Great tools exist but discovering them requires manual research across GitHub, forums, and documentation
+
+Why make agents (and users) hunt for tools when we can bring the tools to them?
 
 ## Quick Start
 
