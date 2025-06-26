@@ -118,27 +118,29 @@ def find_mcp_tool(description: str, example_question: str | None = None) -> dict
 
 **Framework:** pytest is configured and working
 
-**Testing Patterns:**
-- Test files live next to the modules they test (e.g., `db/test_database.py`)
-- Test files follow `test_*.py` naming convention 
-- Use pytest fixtures and assertions
-- Import modules using relative imports: `from .database import MCPServerEntry`
-- Test multiple scenarios: normal cases, edge cases, type validation
-- Run tests with: `uv run pytest` (runs all tests) or `uv run pytest db/ -v` (specific module)
+**Testing Strategy:**
+- **Unit tests**: Fast, mocked, always run (db/test_database.py, test_precomputed_data_workflow.py)
+- **Integration tests**: Real GitHub downloads, behind environment flags
+- **Critical path focus**: First-user onboarding experience thoroughly tested
 
-**Test Structure Example:**
-```python
-import pytest
-from module import function_to_test
+**Key Test Files:**
+- `db/test_database.py` - Core database functionality tests
+- `db/test_precomputed_data_workflow.py` - Complete onboarding flow tests with optional real GitHub integration
 
-def test_function_basic_case():
-    result = function_to_test(input_data)
-    assert result == expected_output
+**Integration Test Flags:**
+- `MCP_MCP_TEST_GITHUB_INTEGRATION=1` - Enable real GitHub download tests
+- `MCP_MCP_TEST_GITHUB_STRESS=1` - Enable concurrent user simulation tests
 
-def test_function_edge_case():
-    result = function_to_test("")
-    assert len(result) == 0
-```
+**Performance Targets (Verified):**
+- Fresh install: < 5 seconds (real GitHub download + 1296 servers + semantic search)
+- Cache hits: < 1 second
+- Concurrent users: 5 simultaneous downloads succeed consistently
+
+**Technical Testing Notes:**
+- GitHub releases use 302 redirects to S3 (requires follow_redirects=True in httpx)
+- Schema versioning tested for both compatible and incompatible scenarios
+- Cache behavior: only created when precomputed data fails (not when it succeeds)
+- Semantic search tested with real embeddings and similarity scoring
 
 ## Development Notes
 
@@ -179,6 +181,7 @@ def test_function_edge_case():
 - `db/semantic_search.py` - Semantic search using sentence-transformers
 - `db/schema_versions.py` - Schema versioning and compatibility framework
 - `db/test_database.py` - Test suite for database functionality
+- `db/test_precomputed_data_workflow.py` - Comprehensive onboarding workflow tests with optional GitHub integration
 
 ## Development Philosophy
 

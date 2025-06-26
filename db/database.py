@@ -255,7 +255,7 @@ class MCPDatabase:
     async def _check_schema_compatibility(self) -> Optional[dict]:
         """Check if precomputed data schema is compatible with this client version."""
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
                 response = await client.get(PRECOMPUTED_DATA_INFO_URL)
                 
                 if response.status_code == 200:
@@ -296,7 +296,7 @@ class MCPDatabase:
             return None
         
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
                 logger.debug("Attempting to download precomputed servers...")
                 response = await client.get(PRECOMPUTED_SERVERS_URL)
                 
@@ -340,7 +340,7 @@ class MCPDatabase:
             return None
         
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
                 logger.debug("Attempting to download precomputed embeddings...")
                 response = await client.get(PRECOMPUTED_EMBEDDINGS_URL)
                 

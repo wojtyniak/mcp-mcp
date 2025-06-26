@@ -142,15 +142,20 @@ mcp-mcp --help
 ## Testing
 
 ```bash
-# Run all tests
+# Run all unit tests (fast, no network)
 uv run pytest
 
 # Run specific module tests
 uv run pytest db/ -v
 
+# Run GitHub integration tests (optional, requires network)
+MCP_MCP_TEST_GITHUB_INTEGRATION=1 uv run pytest db/test_precomputed_data_workflow.py::test_real_github_download -v -s
+
 # Run with coverage
 uv run pytest --cov=db
 ```
+
+**Integration Tests**: Set `MCP_MCP_TEST_GITHUB_INTEGRATION=1` to test real GitHub downloads and verify the complete first-user onboarding experience. These tests ensure users get fast startup (< 5 seconds) with 1296+ servers.
 
 ## Roadmap
 
