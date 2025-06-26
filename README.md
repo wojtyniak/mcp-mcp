@@ -106,7 +106,7 @@ uv run main.py
 
 ### Development Mode
 
-For development with HTTP transport:
+For development and testing, use HTTP transport (easier to stop with Ctrl+C):
 
 ```bash
 # HTTP mode (accessible at http://localhost:8000)
@@ -114,6 +114,9 @@ uv run main.py --http
 
 # Custom host/port
 uv run main.py --http --host 0.0.0.0 --port 3000
+
+# STDIO mode (for MCP clients like Claude Desktop)
+uv run main.py  # Note: To stop STDIO mode, use Ctrl+D (EOF), not Ctrl+C
 ```
 
 ### Building

@@ -449,3 +449,28 @@
   - Stale: 1,296 servers, Fresh: 200 servers → Use stale cache ✅
   - Stale: 500 servers, Fresh: 1,000 servers → Use fresh data ✅
 - **User Impact**: Better reliability during network issues, always gets most complete dataset
+
+### FastMCP 2.0 Migration Experiment - Complete Revert ✅
+- **Problem**: Attempted to solve 3 Ctrl-C signal handling issue by migrating to FastMCP 2.0
+- **Migration Process**: 
+  - Changed dependency from `mcp>=1.9.4` to `fastmcp>=2.9.2`
+  - Updated imports from `mcp.server.fastmcp` to `fastmcp`
+  - Maintained all lifespan management and performance optimizations
+- **Critical Regression**: Accidentally removed detailed tool description (95 lines of AI agent guidance)
+  - Lost FIRST ACTION RULE, CONFIDENCE CHECK, IMMEDIATE SEARCH TRIGGERS
+  - User feedback: "Dude, you removed the whole description of the tool which is critical for the tool usage"
+- **Signal Handling Discovery**: FastMCP 2.0 did NOT solve the signal handling issue
+  - Still required 3 Ctrl-C presses to quit stdio server
+  - Discovered EOF (Ctrl-D) is the proper way to terminate stdio mode
+- **Benefits Analysis**: FastMCP 2.0 provided minimal benefits vs maintenance costs
+  - Official MCP library better for long-term support and compatibility
+- **Complete Revert**: Successfully reverted to official MCP library with feature parity
+  - ✅ Restored complete tool description with AI agent behavioral triggers
+  - ✅ Maintained performance optimizations and lifespan management  
+  - ✅ Updated documentation to use EOF (Ctrl-D) for clean termination
+  - ✅ Cleaned up all FastMCP references in README and CLAUDE.md
+- **Migration Lessons**:
+  - Always preserve critical functionality during library migrations
+  - Make minimal changes - don't combine migration with logic improvements
+  - EOF (Ctrl-D) is standard way to terminate stdin-based processes
+  - Official libraries often provide better long-term value than newer alternatives

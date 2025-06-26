@@ -1,3 +1,4 @@
+import sys
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import AsyncGenerator
@@ -5,7 +6,7 @@ from typing import AsyncGenerator
 import httpx
 from mcp.server.fastmcp import Context, FastMCP
 
-from db import MCPDatabase, MCPServerEntry  # noqa: E402
+from db import MCPDatabase
 from settings import app_logger
 
 logger = app_logger.getChild(__name__)
@@ -310,6 +311,10 @@ def main():
         transport = "stdio"
         args = None
 
+    # Note: STDIO mode is designed for MCP client communication, not interactive use
+    # To terminate STDIO mode: send EOF (Ctrl+D) or close stdin
+    # For development/testing, use --http mode for easier Ctrl+C termination
+
     try:
         if transport == "streamable-http" and args:
             logger.info(f"Starting MCP-MCP server on {args.host}:{args.port}")
@@ -317,9 +322,12 @@ def main():
             mcp.run(transport=transport)
         else:
             logger.info("Starting MCP-MCP server with stdio transport")
+            logger.info("Server is ready for MCP client connections via stdin/stdout")
+            logger.info("To stop: send EOF (Ctrl+D) or close stdin")
             mcp.run(transport=transport)
     except KeyboardInterrupt:
         logger.info("Shutting down...")
+        sys.exit(0)
     except Exception as e:
         logger.error(f"Error: {e}")
         raise e

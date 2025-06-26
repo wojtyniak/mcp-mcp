@@ -162,6 +162,7 @@ def find_mcp_tool(description: str, example_question: str | None = None) -> dict
 
 **Known Issues:**
 - **Semantic Search Quality**: Some generic queries (e.g. "Tool for programmatically testing a website") return irrelevant results due to semantic model limitations. Affects queries that don't use specific technical terms. Specific technical queries work well (e.g. "browser automation", "playwright testing").
+- **STDIO Mode Signal Handling**: STDIO transport has known Ctrl+C handling limitations (MCP SDK issue #396). Use `--http` mode for development/testing where Ctrl+C works properly.
 
 **Missing Infrastructure (to be added):**
 - Code formatting/linting (ruff, black)
