@@ -75,8 +75,8 @@ class OriginValidationMiddleware(BaseHTTPMiddleware):
         if host is not None:
             # Extract hostname from host header (remove port if present)
             hostname = host.split(":")[0]
-            # Allow localhost and 127.0.0.1 for local development
-            if hostname not in ("localhost", "127.0.0.1"):
+            # Allow localhost, 127.0.0.1, and testserver (for unit tests)
+            if hostname not in ("localhost", "127.0.0.1", "testserver"):
                 logger.warning(f"Rejected request with invalid host: {host}")
                 return Response(
                     content="Forbidden: Invalid host header", 

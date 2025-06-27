@@ -12,7 +12,7 @@ class TestOriginValidation:
 
     def test_origin_middleware_allows_valid_origins(self):
         """Test that valid origins are allowed."""
-        # Create a test app with middleware - include all local hosts for TestClient compatibility
+        # Create a test app with middleware - testserver needs to be allowed in production code for tests
         app = mcp.streamable_http_app()
         app.add_middleware(OriginValidationMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
         

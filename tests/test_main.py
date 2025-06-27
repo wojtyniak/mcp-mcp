@@ -69,14 +69,21 @@ class TestFindMCPTool:
             assert "suggestions" in result
 
     @pytest.mark.asyncio
-    async def test_find_mcp_tool_db_not_initialized(self):
-        """Test when database is not initialized."""
+    async def test_find_mcp_tool_auto_initializes_db(self):
+        """Test that database auto-initializes when not available."""
         with patch('main._global_mcp_db', None):
-            result = await find_mcp_tool("test query")
+            # Mock the database creation to avoid real initialization
+            mock_db = MagicMock()
+            mock_server = MCPServerEntry("auto-init-server", "Test server", "https://github.com/test/auto", "reference")
+            mock_db.search.return_value = [mock_server]
+            
+            with patch('main.MCPDatabase.create', return_value=mock_db):
+                with patch('main._fetch_readme_content', return_value="# Auto Init Server"):
+                    result = await find_mcp_tool("test query")
 
-            # Assertions
-            assert result["status"] == "error"
-            assert "database not initialized" in result["message"]
+                    # Should succeed and find server
+                    assert result["status"] == "found"
+                    assert result["server"]["name"] == "auto-init-server"
 
     @pytest.mark.asyncio
     async def test_find_mcp_tool_with_alternatives(self, mock_database):
