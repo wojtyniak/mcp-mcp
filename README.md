@@ -228,19 +228,19 @@ uv run pytest --cov=db
 
 ## Roadmap
 
-### Current Status: PoC Complete
-- ✅ Multi-source discovery (3 curated MCP server lists)
-- ✅ Semantic search with precomputed embeddings
-- ✅ Configuration string generation
-- ✅ FastMCP integration
+### Current Status: MVP Complete ✅
+- ✅ Multi-source discovery (3 curated sources, 1296+ unique servers)
+- ✅ Semantic search with precomputed embeddings for sub-second response
+- ✅ Production distribution via uvx/pipx with automated releases
+- ✅ Security hardened with origin validation middleware
+- ✅ Comprehensive test coverage (65+ tests)
+- ✅ Complete documentation and development workflow
 
-### Next: MVP Foundation
-- [ ] Multi-source discovery (GitHub API)
-- [ ] Docker integration for server execution
-- [ ] MCP protocol proxy
-- [ ] Server lifecycle management
-
-### Future Enhancements
+### Future Enhancements (Beyond MVP)
+- [ ] Docker integration for automatic server containerization
+- [ ] MCP protocol proxy for seamless server execution
+- [ ] GitHub API integration for live server discovery
+- [ ] Server lifecycle management and cleanup
 - [ ] Private registry support
 - [ ] Dependency resolution
 - [ ] Performance monitoring

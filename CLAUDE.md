@@ -36,38 +36,39 @@ See @PRD.md for the product requirements and architecture documentation.
 - Key dependencies: `httpx`, `mcp`, `sentence-transformers`, `rich`, `pydantic-settings`
 - Planned: Docker for server containerization, GitHub API for discovery
 
-**Development Phases (from PRD.md):**
-1. **PoC**: Single-source discovery with manual configuration
-2. **MVP Foundation**: Multi-source discovery (GitHub API) with Docker integration
-3. **MVP Core**: MCP protocol proxy with automated container execution
-4. **MVP Polish**: Full server management with cleanup and monitoring
+**Development Status:**
+1. **MVP Complete**: Multi-source discovery with semantic search and security hardening ✅
+2. **Future Work**: Docker integration, MCP protocol proxy, advanced server management
 
-**Key Architectural Patterns:**
-- **Discovery Pattern**: Search multiple sources (GitHub, MCP lists, registries) for appropriate MCP servers
-- **Containerization**: Build and run discovered servers in Docker containers for isolation
-- **Proxy Pattern**: Route MCP protocol requests between clients and containerized servers
-- **Multi-language Support**: Generate Dockerfiles for Python, Node.js, and other MCP servers
+**Current Architecture Patterns:**
+- **Multi-Source Discovery**: Aggregate servers from 3 curated sources with intelligent deduplication
+- **Semantic Search**: Use sentence-transformers for accurate capability matching
+- **Security Middleware**: Origin validation preventing DNS rebinding attacks
+- **Production Distribution**: Automated releases with precomputed data for fast startup
 
 ## Current Implementation Status
 
-**PoC COMPLETE ✅:**
-- MCP server list parser (`db/database.py:parse_mcp_server_list()`)
-- Semantic search with sentence-transformers (`db/semantic_search.py`)
-- Find MCP server tool with README fetching (`main.py:find_mcp_tool()`)
-- Comprehensive pytest test suite (`db/test_database.py`)
-- Custom logging with Rich and Pydantic settings (`settings.py`)
-- FastMCP server integration with lifespan management (`main.py`)
-- **README Integration**: Automatic fetching of documentation from GitHub repositories
-- **Production Distribution**: uvx/pipx installation, Claude Desktop integration
-- **Comprehensive Documentation**: README.md with complete user/developer guide
+**MVP COMPLETE ✅:**
+- **Multi-Source Discovery**: 3 curated sources providing 1296+ unique MCP servers
+- **Semantic Search**: sentence-transformers with precomputed embeddings for sub-second search
+- **Security Hardened**: Origin validation middleware preventing DNS rebinding attacks
+- **Production Distribution**: uvx/pipx installation, Claude Desktop integration, automated releases
+- **Test Architecture**: Comprehensive test suite with 65+ tests covering unit and integration scenarios
+- **Documentation**: Complete README.md with security, development workflow, and user guides
 
-**Next Phase - MVP Foundation:**
-- Multi-source discovery (GitHub API integration)
-- Docker integration for server execution
-- MCP protocol proxy
-- CI/CD pipeline
+**MVP Security Features ✅:**
+- **Origin Validation Middleware**: Prevents DNS rebinding attacks by restricting Origins to localhost
+- **Host Header Validation**: Validates Host headers to ensure requests come from allowed sources  
+- **Production Hardening**: Only allows localhost/127.0.0.1 in production (no test hostnames)
+- **Security Test Coverage**: AsyncMock-based tests ensuring middleware reliability
 
-**Main Entry Point:** `main.py` - full FastMCP server with CLI interface
+**Future Work (Beyond MVP):**
+- Docker integration for automatic server containerization
+- MCP protocol proxy for seamless server execution
+- GitHub API integration for live server discovery
+- Advanced server management and lifecycle features
+
+**Main Entry Point:** `main.py` - full FastMCP server with CLI interface and security middleware
 
 ## MCP Protocol Integration
 
@@ -174,7 +175,6 @@ def find_mcp_tool(description: str, example_question: str | None = None) -> dict
 
 - `README.md` - Comprehensive project documentation, installation, and usage guide
 - `PRD.md` - Product requirements and architecture documentation
-- `TASKS.md` - Tasks to be completed
 - `pyproject.toml` - Project dependencies, scripts, and pytest configuration
 - `main.py` - FastMCP server entry point with CLI interface
 - `settings.py` - Application settings and logging configuration
@@ -183,6 +183,9 @@ def find_mcp_tool(description: str, example_question: str | None = None) -> dict
 - `db/schema_versions.py` - Schema versioning and compatibility framework
 - `db/test_database.py` - Test suite for database functionality
 - `db/test_precomputed_data_workflow.py` - Comprehensive onboarding workflow tests with optional GitHub integration
+- `tests/test_origin_validation.py` - Security middleware test suite with AsyncMock
+- `tests/test_e2e.py` - End-to-end integration tests
+- `tests/test_main.py` - Main application functionality tests
 
 ## Development Philosophy
 
