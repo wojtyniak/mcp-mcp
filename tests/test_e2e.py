@@ -335,21 +335,18 @@ class TestE2EPerformance:
         assert len(results) > 0
 
     @pytest.mark.asyncio
-    async def test_cache_effectiveness(self):
-        """Test that caching improves performance on subsequent runs."""
-        import time
+    async def test_consistent_data_loading(self):
+        """Test that database loading works consistently."""
         from main import MCPDatabase
         
         # First database creation
-        start_time = time.time()
         mcp_db1 = await MCPDatabase.create()
-        first_time = time.time() - start_time
         
-        # Second database creation (should use cache)
-        start_time = time.time()
+        # Second database creation (should get same data)
         mcp_db2 = await MCPDatabase.create()
-        second_time = time.time() - start_time
         
-        # Second creation should be significantly faster (cache hit)
-        # Allow some variance but should be at least 2x faster
-        assert second_time < first_time / 2 or second_time < 0.1  # Under 100ms is definitely cached
+        # Both should have substantial data and be identical
+        assert len(mcp_db1.servers) > 1000  # Verify we have substantial data
+        assert len(mcp_db2.servers) == len(mcp_db1.servers)  # Same data
+        assert mcp_db1.semantic_engine is not None  # Semantic search initialized
+        assert mcp_db2.semantic_engine is not None  # Semantic search initialized

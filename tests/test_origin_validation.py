@@ -3,22 +3,24 @@ Test Origin validation middleware for security.
 """
 
 import pytest
-from starlette.testclient import TestClient
-from main import mcp, OriginValidationMiddleware
+from unittest.mock import AsyncMock, MagicMock
+from starlette.requests import Request
+from starlette.responses import Response
+from main import OriginValidationMiddleware
 
 
 class TestOriginValidation:
     """Test the Origin validation middleware."""
 
-    def test_origin_middleware_allows_valid_origins(self):
+    @pytest.mark.asyncio
+    async def test_origin_middleware_allows_valid_origins(self):
         """Test that valid origins are allowed."""
-        # Create a test app with middleware - testserver needs to be allowed in production code for tests
-        app = mcp.streamable_http_app()
-        app.add_middleware(OriginValidationMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
+        middleware = OriginValidationMiddleware(None, ["localhost", "127.0.0.1"])
         
-        client = TestClient(app)
+        # Mock next handler
+        mock_next = AsyncMock(return_value=Response("OK", 200))
         
-        # Valid origins should be allowed
+        # Test valid origins
         valid_origins = [
             "http://localhost",
             "https://localhost", 
@@ -28,17 +30,21 @@ class TestOriginValidation:
         ]
         
         for origin in valid_origins:
-            response = client.get("/", headers={"Origin": origin})
-            # Should get 404 (endpoint doesn't exist) not 403 (forbidden)
-            assert response.status_code == 404, f"Origin {origin} should be allowed"
+            # Create mock request with valid origin and host
+            mock_request = MagicMock(spec=Request)
+            mock_request.headers = {"origin": origin, "host": "localhost:8000"}
+            
+            response = await middleware.dispatch(mock_request, mock_next)
+            
+            # Should call next handler (not blocked)
+            assert response.status_code == 200, f"Origin {origin} should be allowed"
+            mock_next.assert_called_with(mock_request)
 
-    def test_origin_middleware_blocks_invalid_origins(self):
+    @pytest.mark.asyncio
+    async def test_origin_middleware_blocks_invalid_origins(self):
         """Test that invalid origins are blocked."""
-        # Create a test app with middleware - include all local hosts for TestClient compatibility
-        app = mcp.streamable_http_app()
-        app.add_middleware(OriginValidationMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
-        
-        client = TestClient(app)
+        middleware = OriginValidationMiddleware(None, ["localhost", "127.0.0.1"])
+        mock_next = AsyncMock(return_value=Response("OK", 200))
         
         # Invalid origins should be blocked
         invalid_origins = [
@@ -49,29 +55,34 @@ class TestOriginValidation:
         ]
         
         for origin in invalid_origins:
-            response = client.get("/", headers={"Origin": origin})
+            mock_request = MagicMock(spec=Request)
+            mock_request.headers = {"origin": origin, "host": "localhost:8000"}
+            
+            response = await middleware.dispatch(mock_request, mock_next)
+            
             assert response.status_code == 403, f"Origin {origin} should be blocked"
-            assert "Invalid origin header" in response.text
+            assert "Invalid origin header" in response.body.decode()
 
-    def test_origin_middleware_allows_no_origin(self):
+    @pytest.mark.asyncio
+    async def test_origin_middleware_allows_no_origin(self):
         """Test that requests without Origin header are allowed."""
-        # Create a test app with middleware - include "testserver" for TestClient compatibility  
-        app = mcp.streamable_http_app()
-        app.add_middleware(OriginValidationMiddleware, allowed_hosts=["localhost", "testserver"])
-        
-        client = TestClient(app)
+        middleware = OriginValidationMiddleware(None, ["localhost", "127.0.0.1"])
+        mock_next = AsyncMock(return_value=Response("OK", 200))
         
         # No origin header should be allowed (many legitimate requests don't have it)
-        response = client.get("/")
-        assert response.status_code == 404  # Not 403
-
-    def test_host_header_validation(self):
-        """Test that invalid Host headers are blocked."""
-        # Create a test app with middleware - include all local hosts for TestClient compatibility
-        app = mcp.streamable_http_app()
-        app.add_middleware(OriginValidationMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers = {"host": "localhost:8000"}  # No origin header
         
-        client = TestClient(app)
+        response = await middleware.dispatch(mock_request, mock_next)
+        
+        assert response.status_code == 200  # Not 403
+        mock_next.assert_called_with(mock_request)
+
+    @pytest.mark.asyncio
+    async def test_host_header_validation(self):
+        """Test that invalid Host headers are blocked."""
+        middleware = OriginValidationMiddleware(None, ["localhost", "127.0.0.1"])
+        mock_next = AsyncMock(return_value=Response("OK", 200))
         
         # Invalid host headers should be blocked
         invalid_hosts = [
@@ -81,17 +92,19 @@ class TestOriginValidation:
         ]
         
         for host in invalid_hosts:
-            response = client.get("/", headers={"Host": host})
+            mock_request = MagicMock(spec=Request)
+            mock_request.headers = {"host": host}  # No origin, just invalid host
+            
+            response = await middleware.dispatch(mock_request, mock_next)
+            
             assert response.status_code == 403, f"Host {host} should be blocked"
-            assert "Invalid host header" in response.text
+            assert "Invalid host header" in response.body.decode()
 
-    def test_valid_host_headers(self):
+    @pytest.mark.asyncio
+    async def test_valid_host_headers(self):
         """Test that valid Host headers are allowed."""
-        # Create a test app with middleware  
-        app = mcp.streamable_http_app()
-        app.add_middleware(OriginValidationMiddleware, allowed_hosts=["localhost"])
-        
-        client = TestClient(app)
+        middleware = OriginValidationMiddleware(None, ["localhost", "127.0.0.1"])
+        mock_next = AsyncMock(return_value=Response("OK", 200))
         
         # Valid host headers should be allowed
         valid_hosts = [
@@ -102,36 +115,40 @@ class TestOriginValidation:
         ]
         
         for host in valid_hosts:
-            response = client.get("/", headers={"Host": host})
-            assert response.status_code == 404, f"Host {host} should be allowed"  # Not 403
+            mock_request = MagicMock(spec=Request)
+            mock_request.headers = {"host": host}
+            
+            response = await middleware.dispatch(mock_request, mock_next)
+            
+            assert response.status_code == 200, f"Host {host} should be allowed"  # Not 403
+            mock_next.assert_called_with(mock_request)
 
-    def test_combined_origin_and_host_validation(self):
+    @pytest.mark.asyncio
+    async def test_combined_origin_and_host_validation(self):
         """Test combined Origin and Host header validation."""
-        # Create a test app with middleware - include all local hosts for TestClient compatibility
-        app = mcp.streamable_http_app()
-        app.add_middleware(OriginValidationMiddleware, allowed_hosts=["localhost", "127.0.0.1", "testserver"])
-        
-        client = TestClient(app)
+        middleware = OriginValidationMiddleware(None, ["localhost", "127.0.0.1"])
+        mock_next = AsyncMock(return_value=Response("OK", 200))
         
         # Both valid should work
-        response = client.get("/", headers={
-            "Origin": "http://localhost:8000",
-            "Host": "localhost:8000"
-        })
-        assert response.status_code == 404  # Not 403
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers = {"origin": "http://localhost:8000", "host": "localhost:8000"}
+        
+        response = await middleware.dispatch(mock_request, mock_next)
+        assert response.status_code == 200  # Not 403
+        mock_next.assert_called_with(mock_request)
         
         # Invalid origin should be blocked even with valid host
-        response = client.get("/", headers={
-            "Origin": "http://evil.com",
-            "Host": "localhost:8000"
-        })
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers = {"origin": "http://evil.com", "host": "localhost:8000"}
+        
+        response = await middleware.dispatch(mock_request, mock_next)
         assert response.status_code == 403
-        assert "Invalid origin header" in response.text
+        assert "Invalid origin header" in response.body.decode()
         
         # Invalid host should be blocked even with valid origin
-        response = client.get("/", headers={
-            "Origin": "http://localhost:8000", 
-            "Host": "evil.com"
-        })
+        mock_request = MagicMock(spec=Request)
+        mock_request.headers = {"origin": "http://localhost:8000", "host": "evil.com"}
+        
+        response = await middleware.dispatch(mock_request, mock_next)
         assert response.status_code == 403
-        assert "Invalid host header" in response.text
+        assert "Invalid host header" in response.body.decode()
