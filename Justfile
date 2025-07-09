@@ -49,5 +49,8 @@ publish-prod: build
 version:
     uv run main.py --version
 
+update-readme:
+    uv run python scripts/update_readme_shields.py
+
 help:
     @just --list 

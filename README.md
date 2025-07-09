@@ -1,13 +1,26 @@
 # MCP-MCP: Meta-MCP Server
 
+[![Servers](https://img.shields.io/badge/dynamic/json?url=https://github.com/wojtyniak/mcp-mcp/releases/download/data-latest/data_info.json&query=$.servers_count&label=servers&suffix=%2B&color=brightgreen)](https://github.com/wojtyniak/mcp-mcp/releases/latest)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Build Status](https://github.com/wojtyniak/mcp-mcp/actions/workflows/update-data.yml/badge.svg)](https://github.com/wojtyniak/mcp-mcp/actions/workflows/update-data.yml)
+[![PyPI](https://img.shields.io/pypi/v/mcp-mcp)](https://pypi.org/project/mcp-mcp/)
 
 ![MCP-MCP: An MCP server that helps discover other MCP servers](assets/matryoshka.jpg)
 
 **MCP-MCP** is a Meta-MCP Server that acts as a tool discovery and provisioning service for the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). When an AI assistant needs a capability that isn't currently available, it can ask MCP-MCP to discover and suggest appropriate MCP servers from a comprehensive database of over a thousand servers aggregated from multiple curated sources.
 
 Think of it as a "phone book" for MCP servers - one tool to find all other tools.
+
+## 🗃️ **1,488+ MCP Servers Available**
+
+MCP-MCP provides access to a comprehensive database aggregated from multiple curated sources, including:
+
+- **Official MCP Servers** (modelcontextprotocol/servers)
+- **Community Collections** (Punkpeye & Appcypher awesome lists)  
+- **Intelligent Deduplication** ensures no duplicates across sources
+
+The database is automatically updated every 3 hours with the latest servers from the community.
 
 ## Motivation
 
@@ -224,12 +237,12 @@ uv run pytest --cov=db
 - **Unit Tests**: Located in `db/` alongside the code they test (Go-style)
 - **Integration/E2E Tests**: Located in `tests/` directory
 
-**Integration Tests**: Set `MCP_MCP_TEST_GITHUB_INTEGRATION=1` to test real GitHub downloads and verify the complete first-user onboarding experience. These tests ensure users get fast startup (< 5 seconds) with 1296+ servers.
+**Integration Tests**: Set `MCP_MCP_TEST_GITHUB_INTEGRATION=1` to test real GitHub downloads and verify the complete first-user onboarding experience. These tests ensure users get fast startup (< 5 seconds) with 1,488+ servers.
 
 ## Roadmap
 
 ### Current Status: MVP Complete ✅
-- ✅ Multi-source discovery (3 curated sources, 1296+ unique servers)
+- ✅ Multi-source discovery (3 curated sources, 1,488+ unique servers)
 - ✅ Semantic search with precomputed embeddings for sub-second response
 - ✅ Production distribution via uvx/pipx with automated releases
 - ✅ Security hardened with origin validation middleware

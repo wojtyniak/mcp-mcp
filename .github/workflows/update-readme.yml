@@ -1,0 +1,87 @@
+name: Update README Server Count
+
+on:
+  # Trigger after data update workflow completes
+  workflow_run:
+    workflows: ["Update Precomputed Data"]
+    types:
+      - completed
+  # Allow manual triggering
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.13"
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    # Only run if the triggering workflow succeeded, or if manually triggered
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      contents: write
+      
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
+        
+    - name: Install dependencies
+      run: uv sync
+      
+    - name: Update README server count
+      id: update
+      run: |
+        echo "Checking if README needs server count update..."
+        if uv run python scripts/update_readme_shields.py; then
+          # Check if README was actually modified
+          if git diff --quiet README.md; then
+            echo "No changes made to README.md"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "README.md was updated with new server count"
+            echo "changed=true" >> $GITHUB_OUTPUT
+            
+            # Get the new server count for commit message
+            if [ -f dist/data_info.json ]; then
+              SERVER_COUNT=$(jq -r '.servers_count' dist/data_info.json)
+            else
+              # Download from release if local file doesn't exist
+              SERVER_COUNT=$(curl -s https://github.com/wojtyniak/mcp-mcp/releases/download/data-latest/data_info.json | jq -r '.servers_count')
+            fi
+            echo "server_count=$SERVER_COUNT" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "Failed to update README server count"
+          exit 1
+        fi
+        
+    - name: Commit README changes
+      if: steps.update.outputs.changed == 'true'
+      run: |
+        # Configure git
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        # Create commit with server count in message
+        git add README.md
+        git commit -m "[automated] Update server count to ${{ steps.update.outputs.server_count }}"
+        
+        # Push changes
+        git push
+        
+    - name: Log summary
+      run: |
+        if [ "${{ steps.update.outputs.changed }}" = "true" ]; then
+          echo "✅ README.md updated with server count: ${{ steps.update.outputs.server_count }}"
+        else
+          echo "ℹ️ README.md already up to date, no changes needed"
+        fi

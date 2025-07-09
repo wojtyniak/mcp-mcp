@@ -21,6 +21,7 @@ This project uses Python 3.13+ with `uv` as the package manager and `direnv` for
 - `uv run main.py` - Run the application
 - `uv build` - Build package for distribution
 - `uvx mcp-mcp` - Install and run via uvx (end-user command)
+- `just update-readme` - Update server count in README.md (test after README changes)
 
 **Environment Configuration:**
 No special environment configuration required. Uses standard Python/uv project setup.
@@ -49,7 +50,7 @@ See @PRD.md for the product requirements and architecture documentation.
 ## Current Implementation Status
 
 **MVP COMPLETE ✅:**
-- **Multi-Source Discovery**: 3 curated sources providing 1296+ unique MCP servers
+- **Multi-Source Discovery**: 3 curated sources providing comprehensive MCP server coverage
 - **Semantic Search**: sentence-transformers with precomputed embeddings for sub-second search
 - **Security Hardened**: Origin validation middleware preventing DNS rebinding attacks
 - **Production Distribution**: uvx/pipx installation, Claude Desktop integration, automated releases
@@ -133,7 +134,7 @@ def find_mcp_tool(description: str, example_question: str | None = None) -> dict
 - `MCP_MCP_TEST_GITHUB_STRESS=1` - Enable concurrent user simulation tests
 
 **Performance Targets (Verified):**
-- Fresh install: < 5 seconds (real GitHub download + 1296 servers + semantic search)
+- Fresh install: < 5 seconds (real GitHub download + comprehensive server database + semantic search)
 - Cache hits: < 1 second
 - Concurrent users: 5 simultaneous downloads succeed consistently
 
@@ -160,6 +161,13 @@ def find_mcp_tool(description: str, example_question: str | None = None) -> dict
 **FastMCP Behavior:**
 - The `lifespan` context manager only executes on the first request to the server, not during startup
 - This is lazy initialization - server starts listening immediately but doesn't run lifespan until first tool call
+
+**README.md Automation:**
+- **Server Count Updates**: README.md contains hardcoded server counts that are automatically updated by GitHub Actions
+- **CRITICAL**: After making changes to README.md, always test the update script: `just update-readme`
+- **Script Location**: `scripts/update_readme_shields.py` - updates all server count references with comma formatting
+- **Automation**: `.github/workflows/update-readme.yml` triggers after data updates and commits changes
+- **Pattern**: Script finds patterns like "1,488+ servers" and "1,488+ unique MCP servers" and updates them consistently
 
 **Known Issues:**
 - **Semantic Search Quality**: Some generic queries (e.g. "Tool for programmatically testing a website") return irrelevant results due to semantic model limitations. Affects queries that don't use specific technical terms. Specific technical queries work well (e.g. "browser automation", "playwright testing").

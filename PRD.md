@@ -12,7 +12,7 @@ A MCP-MCP (meta-mcp) Server that acts as a tool discovery and provisioning servi
 3. Proxy requests to the containerized server
 
 ### MVP Success Criteria ✅ ACHIEVED
-- ✅ Successfully discover MCP servers from 3 different sources (1296+ unique servers)
+- ✅ Successfully discover MCP servers from 3 different sources (comprehensive unique server coverage)
 - ✅ Semantic search with sub-second response times using precomputed embeddings
 - ✅ Production-ready distribution via uvx/pipx with automated releases
 - ✅ Security hardened with origin validation middleware
@@ -31,7 +31,7 @@ A MCP-MCP (meta-mcp) Server that acts as a tool discovery and provisioning servi
 ```
 Current MVP:
 1. Claude Code calls: find_mcp_tool("check domain availability for example.com")
-2. Meta-MCP searches across 3 curated sources with 1296+ servers using semantic search
+2. Meta-MCP searches across 3 curated sources with comprehensive server database using semantic search
 3. Finds relevant servers like "mcp-whois" with complete documentation  
 4. Returns server details with README installation instructions
 5. User manually configures Claude Desktop/Code with provided configuration
@@ -46,7 +46,7 @@ Future Enhancement:
 ```
 Current MVP:
 1. Claude Desktop Client calls: find_mcp_tool("find weather data for Tokyo, Japan, for the next 7 days")
-2. Meta-MCP searches 1296+ servers using semantic similarity matching
+2. Meta-MCP searches comprehensive server database using semantic similarity matching
 3. Finds weather-related servers with complete setup documentation
 4. Returns server details with configuration instructions for Claude Desktop
 5. User adds server to Claude Desktop configuration and restarts
@@ -197,7 +197,7 @@ CMD ["{{tool_name}}"]
 
 ### Phase 1: MVP Complete ✅
 1. **Multi-Source Discovery ✅**
-   - 3 curated MCP server sources with 1296+ unique servers
+   - 3 curated MCP server sources with comprehensive unique server coverage
    - Semantic search using sentence-transformers for accurate matching
    - Precomputed embeddings for sub-second startup performance
 
