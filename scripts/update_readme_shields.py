@@ -56,7 +56,7 @@ async def get_current_server_count() -> Optional[int]:
     
     # Try downloading from GitHub release
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
             response = await client.get(DATA_INFO_URL)
             if response.status_code == 200:
                 data = response.json()
