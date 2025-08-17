@@ -12,7 +12,7 @@
 
 Think of it as a "phone book" for MCP servers - one tool to find all other tools.
 
-## 🗃️ **1,710+ MCP Servers Available**
+## 🗃️ **1,724+ MCP Servers Available**
 
 MCP-MCP provides access to a comprehensive database aggregated from multiple curated sources, including:
 
@@ -237,12 +237,12 @@ uv run pytest --cov=db
 - **Unit Tests**: Located in `db/` alongside the code they test (Go-style)
 - **Integration/E2E Tests**: Located in `tests/` directory
 
-**Integration Tests**: Set `MCP_MCP_TEST_GITHUB_INTEGRATION=1` to test real GitHub downloads and verify the complete first-user onboarding experience. These tests ensure users get fast startup (< 5 seconds) with 1,710+ servers.
+**Integration Tests**: Set `MCP_MCP_TEST_GITHUB_INTEGRATION=1` to test real GitHub downloads and verify the complete first-user onboarding experience. These tests ensure users get fast startup (< 5 seconds) with 1,724+ servers.
 
 ## Roadmap
 
 ### Current Status: MVP Complete ✅
-- ✅ Multi-source discovery (3 curated sources, 1,710+ unique servers)
+- ✅ Multi-source discovery (3 curated sources, 1,724+ unique servers)
 - ✅ Semantic search with precomputed embeddings for sub-second response
 - ✅ Production distribution via uvx/pipx with automated releases
 - ✅ Security hardened with origin validation middleware
