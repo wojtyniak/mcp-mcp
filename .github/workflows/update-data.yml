@@ -1,9 +1,9 @@
 name: Update Precomputed Data
 
 on:
-  schedule:
-    # Run every 3 hours
-    - cron: '0 */3 * * *'
+  # schedule:
+  #   # Run every 3 hours
+  #   - cron: '0 */3 * * *'
   workflow_dispatch:
     # Allow manual triggering
 
